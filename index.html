@@ -1,0 +1,4511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>RITE OF OFFERINGS</title>
+
+<style>
+:root{
+  --navy:#0d0d22;--navy2:#181836;--navy3:#22224a;
+  --felt:#0a2015;
+  --card-bg:#f5edd8;
+  --yr:#ff3c3c;--yr2:#ff6060;
+  --yb:#3377ff;--yb2:#77aaff;
+  --yg:#00ff7f;--yg2:#66ffaa;
+  --yp:#cc33ff;
+  --yo:#ff7733;--yo2:#ffaa66;
+  --yy:#ffcc00;--yy2:#ffee55;
+  --wh:#fff;--ow:#eeeedd;
+  --dim:#888877;--dmr:#444433;
+  --sc:#cc33ff;--tc:#00ff7f;--mc:#ff7733;
+  --fui:Arial,Helvetica,sans-serif;
+  --card-h:240px;
+  --rz-card-w:120px;--rz-card-h:160px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100dvh;overflow:hidden;background:#050510;}
+body{font-family:var(--fui);font-weight:700;color:var(--wh);}
+
+/* ── WIN ── */
+#s-win{position:fixed;inset:0;z-index:999;display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:18px;text-align:center;padding:6%;
+  background:rgba(5,5,18,.97);}
+#s-win.show{display:flex;}
+#win-ttl{font-size:2rem;color:var(--yy);letter-spacing:4px;
+  text-shadow:0 0 20px var(--yy),4px 4px 0 rgba(0,0,0,.9);text-transform:uppercase;}
+#win-sub{font-size:1rem;color:var(--ow);}
+.sep{width:240px;height:3px;background:var(--yy);box-shadow:0 0 10px var(--yy);}
+
+/* ══════════════════════════════════════════
+   GAME SHELL
+   grid: topbar | [left | center | right] | abar
+══════════════════════════════════════════ */
+#game{
+  display:grid;width:100%;height:100dvh;
+  grid-template-rows:48px 1fr 58px;
+  grid-template-columns:1fr;
+  background:var(--felt);
+  background-image:
+    radial-gradient(ellipse at 50% 50%,rgba(20,70,35,.5) 0%,transparent 70%),
+    repeating-linear-gradient(0deg,rgba(0,0,0,.05) 0,rgba(0,0,0,.05) 1px,transparent 1px,transparent 4px),
+    repeating-linear-gradient(90deg,rgba(0,0,0,.04) 0,rgba(0,0,0,.04) 1px,transparent 1px,transparent 4px);
+}
+
+/* ── TOPBAR ── */
+#topbar{
+  background:var(--navy);border-bottom:4px solid var(--yy);
+  padding:0 18px;display:flex;align-items:center;gap:14px;
+}
+#topbar h2{font-size:.78rem;color:var(--yy);text-shadow:0 0 8px var(--yy);
+  letter-spacing:3px;text-transform:uppercase;white-space:nowrap;}
+#tinfo{font-size:.72rem;color:var(--ow);margin-left:auto;white-space:nowrap;}
+#pbadge{padding:3px 10px;border:2px solid var(--yg);font-size:.62rem;color:var(--yg);
+  text-shadow:0 0 6px var(--yg);background:rgba(0,255,127,.07);white-space:nowrap;}
+#player-count-badge{padding:3px 10px;border:2px solid var(--yb);font-size:.62rem;color:var(--yb2);
+  text-shadow:0 0 6px var(--yb);background:rgba(51,119,255,.07);white-space:nowrap;}
+.setup-select{
+  width:100%;padding:10px 12px;margin:10px 0 12px;border:3px solid var(--yy);
+  background:var(--navy);color:var(--ow);font-family:var(--fui);font-weight:900;
+  font-size:.9rem;text-transform:uppercase;
+}
+.tutorial-rules{
+  display:grid;gap:10px;color:var(--ow);line-height:1.45;
+}
+.tutorial-rules .rule-card{
+  border:2px solid rgba(255,204,0,.18);background:rgba(0,0,0,.22);
+  padding:10px 12px;box-shadow:3px 3px 0 rgba(0,0,0,.35);
+}
+.tutorial-rules .rule-card b{color:var(--yy);letter-spacing:.5px;}
+.tutorial-rules ul{margin:6px 0 0 18px;}
+.tutorial-rules li{margin:3px 0;font-size:.72rem;color:var(--ow);font-weight:800;}
+.tutorial-rules .tipline{
+  color:var(--yg);border:2px solid rgba(0,255,127,.25);background:rgba(0,255,127,.06);
+  padding:8px 10px;font-size:.72rem;
+}
+#rbanner{display:none;padding:3px 10px;border:2px solid var(--yr);font-size:.6rem;
+  color:var(--yr);background:rgba(255,60,60,.1);animation:blk .6s infinite;white-space:nowrap;}
+@keyframes blk{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+/* ── TARGET WARNING BORDER ── */
+#target-alert{
+  position:fixed;inset:0;z-index:540;pointer-events:none;opacity:0;
+  transition:opacity .16s ease;
+  background:
+    linear-gradient(to right,rgba(255,0,0,.82),rgba(255,0,0,.18) 18px,transparent 92px,transparent calc(100% - 92px),rgba(255,0,0,.18) calc(100% - 18px),rgba(255,0,0,.82)),
+    linear-gradient(to bottom,rgba(255,0,0,.82),rgba(255,0,0,.18) 18px,transparent 92px,transparent calc(100% - 92px),rgba(255,0,0,.18) calc(100% - 18px),rgba(255,0,0,.82));
+  box-shadow:inset 0 0 44px rgba(255,0,0,.5),inset 0 0 12px rgba(255,80,80,.9);
+}
+#target-alert.show{opacity:1;animation:tgtPulse .62s infinite alternate;}
+#target-alert::after{
+  content:'TARGETED';position:absolute;left:50%;top:58px;transform:translateX(-50%);
+  padding:5px 16px;border:2px solid rgba(255,60,60,.9);background:rgba(20,0,0,.78);
+  color:#ff8080;font-size:.68rem;letter-spacing:3px;text-shadow:0 0 9px #ff3c3c;
+  box-shadow:4px 4px 0 rgba(0,0,0,.6),0 0 22px rgba(255,0,0,.35);
+}
+@keyframes tgtPulse{from{filter:brightness(1);box-shadow:inset 0 0 30px rgba(255,0,0,.38),inset 0 0 8px rgba(255,80,80,.75);}to{filter:brightness(1.25);box-shadow:inset 0 0 70px rgba(255,0,0,.65),inset 0 0 18px rgba(255,120,120,1);}}
+
+/* ── MAIN AREA: 3 columns ── */
+#main-area{
+  display:grid;
+  grid-template-columns:200px minmax(0,1fr) 320px;
+  grid-template-rows:1fr;
+  overflow:hidden;
+  height:100%;
+}
+
+/* ══════════════════
+   LEFT SIDEBAR
+   Piles top, opponents below
+══════════════════ */
+#left-sidebar{
+  background:rgba(0,0,0,.35);
+  border-right:2px solid rgba(255,204,0,.12);
+  display:flex;flex-direction:column;gap:10px;
+  padding:12px 10px;overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:none;
+}
+#left-sidebar::-webkit-scrollbar{display:none;}
+.sidebar-label{
+  font-size:.52rem;color:var(--dim);text-transform:uppercase;
+  letter-spacing:2px;margin-bottom:4px;
+}
+/* P and D piles in a row */
+.pile-pair{display:flex;gap:8px;align-items:flex-start;margin-bottom:4px;}
+.pile{
+  width:76px;height:100px;
+  border:3px solid var(--dim);
+  box-shadow:4px 4px 0 rgba(0,0,0,.7);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;cursor:pointer;transition:border-color .2s;flex-shrink:0;
+}
+.pile:hover{border-color:var(--yy);}
+.pdraw{
+  background:repeating-linear-gradient(45deg,#080820,#080820 3px,#101030 3px,#101030 6px);
+  border-color:var(--yb);box-shadow:4px 4px 0 rgba(0,0,0,.7),0 0 8px rgba(51,119,255,.15);
+}
+.pdisc{background:var(--navy2);border-color:var(--dmr);}
+.pnum{font-size:1.3rem;color:var(--yy);text-shadow:0 0 6px var(--yy);line-height:1;font-weight:900;}
+.plbl{font-size:.46rem;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;}
+.ptop{font-size:.56rem;color:var(--ow);text-align:center;line-height:1.1;
+  padding:1px 4px;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* Floating public deck/discard above the centered Resolution Zone */
+#left-sidebar > .sidebar-label:first-child{
+  position:fixed;
+  left:50%;
+  top:calc(40% - 324px);
+  transform:translateX(-50%);
+  z-index:45;
+  text-align:center;
+  width:max-content;
+  pointer-events:none;
+}
+#left-sidebar > .pile-pair{
+  position:fixed;
+  left:50%;
+  top:calc(40% - 300px);
+  transform:translateX(-50%);
+  z-index:45;
+  justify-content:center;
+  margin:0;
+}
+#left-sidebar > .pile-pair{
+  gap:11px;
+}
+#left-sidebar > .pile-pair .pile{
+  width:123px;
+  height:162px;
+}
+#left-sidebar > .pile-pair .pnum{font-size:1.82rem;}
+#left-sidebar > .pile-pair .plbl{font-size:.64rem;}
+#left-sidebar > .pile-pair .ptop{
+  max-width:115px;
+  font-size:.78rem;
+}
+
+/* Draw choice buttons */
+#draw-choice{display:none;flex-direction:column;gap:6px;}
+#draw-choice.active{
+  position:fixed;
+  left:calc(50% - 263px);
+  top:calc(40% - 300px);
+  z-index:46;
+  display:flex;
+  width:123px;
+  height:162px;
+  padding:8px;
+  justify-content:center;
+  background:rgba(8,8,28,.92);
+  border:3px solid var(--yy);
+  box-shadow:4px 4px 0 rgba(0,0,0,.7),0 0 12px rgba(255,204,0,.12);
+}
+#draw-choice .sidebar-label{
+  margin:0 0 2px;
+  font-size:.48rem;
+  text-align:center;
+  letter-spacing:1px;
+}
+.draw-btn{
+  flex:1;
+  padding:7px 8px;border:2px solid;font-family:var(--fui);font-weight:900;
+  font-size:.55rem;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;
+  transition:background .15s;
+}
+.draw-pub{border-color:var(--yb);color:var(--yb);background:rgba(51,119,255,.08);}
+.draw-pub:hover{background:rgba(51,119,255,.25);}
+.draw-per{border-color:var(--yo);color:var(--yo);background:rgba(255,119,51,.08);}
+.draw-per:hover{background:rgba(255,119,51,.25);}
+.draw-per:disabled{opacity:.3;cursor:not-allowed;}
+/* Opponent panels */
+#opponents-list{display:flex;flex-direction:column;gap:10px;min-height:0;}
+.opp{
+  background:var(--navy2);border:2px solid var(--dmr);
+  padding:8px;display:flex;flex-direction:column;gap:5px;
+  box-shadow:2px 2px 0 rgba(0,0,0,.6);flex-shrink:0;
+  transition:border-color .2s;
+}
+.opp.act{border-color:var(--yy);box-shadow:2px 2px 0 rgba(0,0,0,.6),0 0 10px rgba(255,204,0,.2);}
+.oh{display:flex;align-items:center;gap:6px;font-size:.6rem;color:var(--yy);
+  padding-bottom:4px;border-bottom:1px solid var(--dmr);text-transform:uppercase;}
+.oname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.oact{font-size:.44rem;color:var(--yg);}
+.ooffc{font-size:1.1rem;color:var(--yr);text-shadow:0 0 5px var(--yr);flex-shrink:0;}
+.oinfo{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.ooff-num{font-size:.8rem;color:var(--yr);font-weight:900;}
+.ooff-lbl{font-size:.42rem;color:var(--dim);}
+.otraps-row{display:flex;gap:2px;margin-left:auto;}
+.otpip{width:18px;height:22px;border:1px solid var(--tc);background:rgba(0,255,127,.07);
+  display:flex;align-items:center;justify-content:center;font-size:.6rem;color:var(--tc);}
+.otempty{width:18px;height:22px;border:1px dashed var(--dmr);}
+.ohct{font-size:.46rem;color:var(--dim);}
+.oblessing{
+  border:2px solid var(--yo);background:rgba(255,119,51,.08);
+  padding:5px 6px;display:flex;flex-direction:column;gap:2px;
+  cursor:pointer;box-shadow:2px 2px 0 rgba(0,0,0,.55);
+}
+.oblessing:hover{background:rgba(255,119,51,.18);box-shadow:2px 2px 0 rgba(0,0,0,.55),0 0 8px rgba(255,119,51,.25);}
+.obless-type{font-size:.38rem;color:var(--yo);letter-spacing:.7px;text-transform:uppercase;}
+.obless-name{font-size:.56rem;color:var(--ow);line-height:1.08;font-weight:900;}
+.obless-eff{font-size:.4rem;color:rgba(238,238,221,.72);line-height:1.15;max-height:2.3em;overflow:hidden;}
+
+/* ══════════════════════════
+   CENTER TABLE
+   RZ at top, player board below
+══════════════════════════ */
+#center-table{
+  display:flex;flex-direction:column;overflow:hidden;
+  position:relative;
+}
+
+/* ── RESOLUTION ZONE ── */
+#rz-area{
+  position:fixed;
+  left:50%;
+  top:40%;
+  transform:translate(-50%,-50%);
+  z-index:40;
+  flex-shrink:0;
+  padding:14px 20px 12px;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  border:3px solid rgba(255,204,0,.18);
+  background:rgba(0,0,0,.72);
+  box-shadow:0 14px 34px rgba(0,0,0,.45);
+  max-width:calc(100vw - 40px);
+}
+#rz-title{
+  font-size:.6rem;color:var(--yy);text-transform:uppercase;
+  letter-spacing:3px;text-shadow:0 0 6px rgba(255,204,0,.3);
+}
+#rz-slots{
+  display:flex;gap:10px;align-items:center;justify-content:center;
+}
+.rz-slot{
+  width:var(--rz-card-w);height:var(--rz-card-h);
+  border:2px dashed rgba(255,204,0,.2);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;transition:border-color .2s;
+  cursor:default;
+  flex-shrink:0;
+}
+.rz-slot:not(:last-child)::after{
+  content:'<';
+  position:absolute;right:-17px;top:50%;transform:translateY(-50%);
+  color:var(--yy);font-size:1rem;font-weight:900;
+  text-shadow:0 0 7px rgba(255,204,0,.45);
+  pointer-events:none;z-index:2;
+}
+.rz-slot.filled{
+  border-style:solid;border-color:var(--yy);
+  cursor:pointer;
+}
+.rz-slot.filled:hover{box-shadow:0 0 12px rgba(255,204,0,.3);}
+.rz-slot.negated{
+  border-style:solid;
+  border-color:var(--yr);
+  box-shadow:0 0 18px rgba(255,60,60,.55),inset 0 0 18px rgba(255,60,60,.18);
+  animation:rzNegFlash .18s step-end infinite;
+}
+.rz-slot.negated .rz-mini{filter:grayscale(.35) brightness(.72);}
+.rz-cancel{
+  position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;
+  background:rgba(80,0,0,.28);color:var(--yr);font-size:4.4rem;font-weight:900;
+  text-shadow:0 0 12px var(--yr),3px 3px 0 rgba(0,0,0,.9);
+  pointer-events:none;animation:rzCancelPop .42s ease-in-out infinite alternate;
+}
+@keyframes rzNegFlash{0%,100%{filter:brightness(1);}50%{filter:brightness(1.45);}}
+@keyframes rzCancelPop{from{transform:scale(.9);opacity:.78;}to{transform:scale(1.08);opacity:1;}}
+.rzmt-empty{font-size:.5rem;color:rgba(255,255,255,.1);}
+.rztop{
+  position:absolute;top:-9px;left:50%;transform:translateX(-50%);
+  background:var(--yy);color:var(--navy);font-size:.3rem;
+  padding:2px 5px;white-space:nowrap;font-weight:900;
+  box-shadow:2px 2px 0 rgba(0,0,0,.5);
+}
+/* mini card inside RZ slot */
+.rz-mini{
+  width:100%;height:100%;
+  display:flex;flex-direction:column;
+  padding:6px;
+}
+.rz-mini.rzs{background:rgba(30,8,50,.95);}
+.rz-mini.rzt{background:rgba(5,30,12,.95);}
+.rz-mini.rztithe{background:rgba(40,18,5,.92);}
+.rzm-type{font-size:.38rem;text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px;}
+.rzs .rzm-type{color:var(--yp);}
+.rzt .rzm-type{color:var(--yg);}
+.rztithe .rzm-type{color:var(--yo);}
+.rzm-name{font-size:.6rem;color:var(--ow);line-height:1.15;flex:1;font-weight:900;word-break:break-word;}
+.rzm-owner{font-size:.38rem;color:var(--dim);margin-top:auto;}
+
+/* ── PLAYER BOARD ── */
+#player-area{
+  flex:1;display:flex;flex-direction:column;
+  padding:12px 16px 8px;gap:10px;
+  overflow:hidden;justify-content:flex-end;
+  min-height:0;
+}
+
+/* Row: [Blessing] [Trap×3] [Offering#] [Action btns centered] */
+#player-info-row{
+  display:flex;align-items:flex-end;gap:14px;flex-shrink:0;
+}
+
+/* Centered player Blessing + Trap zones under the Resolution Zone */
+#zone-row{
+  position:fixed;
+  left:50%;
+  top:calc(40% + 118px);
+  transform:translateX(-50%);
+  z-index:39;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  gap:14px;
+  padding:8px 12px;
+  max-width:calc(100vw - 360px);
+  pointer-events:auto;
+}
+
+/* BLESSING ZONE — blue border per reference */
+#pmon{
+  width:130px;height:168px;flex-shrink:0;
+  border:3px solid #4488ff;
+  background:rgba(10,15,40,.88);
+  box-shadow:4px 4px 0 rgba(0,0,0,.8),0 0 10px rgba(68,136,255,.15);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+#pmon .lbl{
+  position:absolute;top:4px;left:0;right:0;text-align:center;
+  font-size:.5rem;color:#4488ff;text-transform:uppercase;letter-spacing:.8px;
+  text-shadow:0 0 5px #4488ff;
+}
+#pmon .mname{font-size:.78rem;color:var(--ow);text-align:center;
+  line-height:1.15;padding:0 5px;margin-top:14px;font-weight:900;}
+#pmon .mpass{font-size:.5rem;color:var(--dim);text-align:center;
+  margin-top:3px;text-transform:uppercase;}
+#pmon .empty{font-size:2rem;color:rgba(68,136,255,.18);}
+
+/* TRAP SLOTS — green border, 3 slots */
+.ptcol{display:flex;gap:6px;flex-shrink:0;align-items:flex-end;}
+.pts{
+  width:130px;height:168px;
+  border:3px solid var(--tc);
+  background:rgba(5,20,10,.82);
+  box-shadow:3px 3px 0 rgba(0,0,0,.7);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;position:relative;
+}
+.ptempty{font-size:.5rem;color:var(--tc);text-transform:uppercase;letter-spacing:.3px;}
+/* Trap face-down: translucent with readable text */
+.ptfd{
+  width:100%;height:100%;
+  background:rgba(10,35,15,.78);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:6px;overflow:hidden;
+}
+.ptfd-sym{font-size:1.2rem;color:rgba(0,255,127,.5);margin-bottom:3px;}
+.ptfd-name{
+  font-size:.56rem;color:rgba(0,255,127,.9);text-align:center;
+  line-height:1.25;font-weight:900;word-break:break-word;
+}
+.ptfd-eff{
+  font-size:.44rem;color:rgba(0,255,127,.58);text-align:center;
+  line-height:1.2;margin-top:3px;overflow:hidden;
+}
+
+/* OFFERING COUNT */
+#p-offering-display{
+  display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;
+}
+.p-off-big{font-size:3.8rem;color:var(--yr);line-height:1;font-weight:900;
+  text-shadow:0 0 14px var(--yr),3px 3px 0 rgba(0,0,0,.9);}
+.p-off-lbl{font-size:.54rem;color:var(--dim);letter-spacing:1px;text-transform:uppercase;}
+#pstat{font-size:.54rem;color:var(--yb2);white-space:nowrap;margin-top:3px;}
+
+/* HAND + personal deck */
+#p-deck-area{
+  display:flex;align-items:flex-end;gap:18px;flex-shrink:0;
+  /* Extra vertical room keeps lifted/hovered hand cards from clipping at the top. */
+  min-height:calc(var(--card-h) + 56px);
+  padding-top:46px;
+  overflow:visible;
+}
+#hand-wrap{
+  flex:1;position:relative;
+  height:calc(var(--card-h) + 56px);
+  overflow:visible;
+  min-width:0;
+}
+#hand{
+  position:relative;width:100%;height:100%;
+  display:flex;align-items:flex-end;gap:10px;
+  overflow-x:auto;overflow-y:hidden;
+  padding:46px 8px 10px;
+}
+#p-personal-deck{
+  width:114px;height:150px;flex-shrink:0;
+  border:4px solid var(--yo);
+  background:rgba(40,20,8,.88);
+  box-shadow:5px 5px 0 rgba(0,0,0,.7),0 0 9px rgba(255,119,51,.16);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:5px;cursor:default;
+}
+#p-personal-deck .pnum{font-size:1.2rem;color:var(--yo);text-shadow:0 0 5px var(--yo);}
+#p-personal-deck .plbl{font-size:.525rem;color:var(--dim);}
+
+/* ══════════════════
+   CARDS (hand)
+══════════════════ */
+.card{
+  width:calc(var(--card-h)*0.68);
+  min-width:calc(var(--card-h)*0.68);
+  height:var(--card-h);
+  cursor:pointer;
+  display:flex;flex-direction:column;
+  padding:10px 9px 8px;
+  position:relative;bottom:0;
+  user-select:none;flex-shrink:0;
+  touch-action:manipulation;
+  background:var(--card-bg);
+  color:var(--navy);
+  box-shadow:0 0 0 2px var(--navy),0 0 0 5px var(--ccolor,#888),4px 4px 0 2px rgba(0,0,0,.8);
+  transform-origin:bottom center;
+  transition:transform .18s ease,box-shadow .18s;
+}
+.card:hover{
+  transform:translateY(-30px) scale(1.06)!important;
+  z-index:100!important;
+  box-shadow:0 0 0 2px var(--navy),0 0 0 5px var(--ccolor,#888),4px 4px 0 2px rgba(0,0,0,.8),0 0 22px var(--ccolor,#888);
+}
+.card.sel{
+  transform:translateY(-22px)!important;
+  z-index:90!important;
+  box-shadow:0 0 0 2px var(--navy),0 0 0 5px var(--ccolor,#888),4px 4px 0 2px rgba(0,0,0,.8),0 0 24px var(--ccolor,#888)!important;
+}
+.sc{--ccolor:var(--sc);}
+.tc{--ccolor:var(--tc);}
+.mc{--ccolor:var(--mc);}
+.card.nop{opacity:1;cursor:pointer;filter:none;}
+.card.resp{
+  box-shadow:0 0 0 2px var(--navy),0 0 0 5px var(--yy),4px 4px 0 2px rgba(0,0,0,.8),0 0 16px var(--yy)!important;
+  animation:rg .5s infinite alternate;
+}
+@keyframes rg{from{filter:brightness(1);}to{filter:brightness(1.1);}}
+.card::before{content:attr(data-suit);position:absolute;top:4px;left:6px;
+  font-size:1.25rem;color:var(--ccolor,#888);font-weight:900;line-height:1;}
+.ctype{font-size:.72rem;letter-spacing:.8px;text-transform:uppercase;
+  padding-bottom:2px;margin-bottom:2px;border-bottom:2px solid rgba(0,0,0,.1);
+  color:var(--ccolor,#888);padding-left:22px;}
+.cname{font-size:1rem;color:var(--navy);line-height:1.15;flex:0 0 auto;
+  margin-bottom:3px;font-weight:900;}
+.cdesc{display:block;font-size:.8rem;color:rgba(10,8,4,.85);line-height:1.4;
+  flex:1;overflow:hidden;word-break:break-word;}
+.cdesc span{font-weight:900;}
+.ccost{display:none;}
+.cbk{background:var(--navy2);
+  box-shadow:0 0 0 2px var(--navy),0 0 0 5px var(--dim),4px 4px 0 2px rgba(0,0,0,.8);}
+.cbk::after{content:'?';position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;font-size:2rem;color:rgba(255,255,255,.18);font-weight:900;}
+.eldritch-card{--ccolor:var(--mc)!important;}
+
+/* ══════════════════
+   LOG PANEL (right)
+   Always visible; no collapsed state
+══════════════════ */
+#log-panel{
+  width:100%;
+  min-width:300px;
+  overflow:hidden;
+  background:var(--navy2);
+  border-left:2px solid rgba(255,204,0,.25);
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+  height:100%;
+  z-index:5;
+}
+#log-panel.open{width:100%;}
+#log-toggle{
+  display:none;
+}
+#log-toggle:hover{background:rgba(255,204,0,.1);}
+#log-inner{
+  flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;width:100%;
+}
+#log-header{
+  padding:10px 12px;border-bottom:2px solid rgba(255,204,0,.15);
+  font-size:.62rem;color:var(--yy);text-transform:uppercase;
+  letter-spacing:2px;flex-shrink:0;white-space:nowrap;
+}
+#log{
+  flex:1;overflow-y:auto;padding:8px 10px;
+  display:flex;flex-direction:column-reverse;gap:3px;
+  scrollbar-width:thin;scrollbar-color:var(--dmr) transparent;
+}
+#log::-webkit-scrollbar{width:4px;}
+#log::-webkit-scrollbar-thumb{background:var(--dmr);}
+/* BIG log text as requested */
+.ll{
+  font-size:14px;  /* ~11pt — readable */
+  color:var(--dim);line-height:1.4;word-break:break-word;flex-shrink:0;
+}
+.hi{color:var(--ow);}.warn{color:var(--yr);}.good{color:var(--yg);text-shadow:0 0 3px var(--yg);}
+
+/* ── ACTION BAR ── */
+#abar{
+  background:var(--navy);border-top:4px solid var(--yy);
+  padding:6px 20px;
+  display:flex;align-items:center;justify-content:center;
+  gap:10px;flex-shrink:0;
+}
+.btn{
+  padding:8px 16px;border:0;font-family:var(--fui);font-weight:900;
+  font-size:.68rem;letter-spacing:.5px;cursor:pointer;text-transform:uppercase;
+  white-space:nowrap;touch-action:manipulation;
+  transition:transform .06s,box-shadow .06s;
+}
+.btn:active:not(:disabled){transform:translate(3px,3px)!important;box-shadow:0 0!important;}
+.btn:disabled{opacity:.25;cursor:not-allowed;pointer-events:none;}
+.bg{background:var(--yy);color:var(--navy);box-shadow:4px 4px 0 #886600;}
+.bg:hover{background:var(--yy2);}
+.bg.rdy{animation:bp .7s infinite alternate;}
+@keyframes bp{from{box-shadow:4px 4px 0 #886600,0 0 8px var(--yy);}
+  to{box-shadow:4px 4px 0 #886600,0 0 22px var(--yy);}}
+.bb{background:var(--yr);color:var(--wh);box-shadow:4px 4px 0 #880000;}
+.bgr{background:var(--navy2);color:var(--dim);
+  box-shadow:4px 4px 0 rgba(0,0,0,.6);border:1px solid var(--dmr);}
+.bgr:hover{background:var(--navy3);color:var(--ow);}
+
+/* ── RESPONSE POPUP ── */
+#resp-popup{
+  position:fixed;top:56px;left:50%;transform:translateX(-50%);z-index:550;
+  background:rgba(8,5,2,.97);border:3px solid var(--yr);
+  box-shadow:0 0 24px rgba(255,60,60,.45),6px 6px 0 rgba(0,0,0,.8);
+  padding:16px 24px 20px;min-width:340px;max-width:500px;
+  display:none;flex-direction:column;align-items:center;gap:12px;text-align:center;
+  animation:respPop .2s ease;
+}
+@keyframes respPop{from{transform:translateX(-50%) translateY(-10px);opacity:0;}
+  to{transform:translateX(-50%) translateY(0);opacity:1;}}
+#resp-popup.show{display:flex;}
+#resp-popup-title{font-size:.8rem;color:var(--yr);text-transform:uppercase;
+  letter-spacing:2px;text-shadow:0 0 8px var(--yr);}
+#resp-popup-card{font-size:.68rem;color:var(--ow);}
+#resp-popup-btns{display:flex;gap:10px;}
+
+/* ── DISCARD VIEWER ── */
+#discard-viewer{
+  position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:580;
+  display:none;flex-direction:column;align-items:center;padding:20px;gap:14px;overflow-y:auto;
+}
+#discard-viewer.show{display:flex;}
+#discard-viewer h3{font-size:.9rem;color:var(--yy);letter-spacing:2px;text-transform:uppercase;
+  text-shadow:0 0 8px var(--yy);}
+#discard-cards{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-width:1000px;}
+.dv-close{
+  position:fixed;top:14px;right:18px;font-size:.7rem;color:var(--dim);
+  cursor:pointer;background:none;border:2px solid var(--dmr);
+  padding:5px 12px;font-family:var(--fui);font-weight:900;
+}
+.dv-close:hover{color:var(--ow);border-color:var(--ow);}
+
+/* ── CARD POPUP (hover) ── */
+#card-popup{
+  position:fixed;z-index:900;pointer-events:none;
+  width:min(360px,calc(100vw - 24px));
+  background:rgba(14,14,34,.98);border:3px solid var(--yy);
+  box-shadow:0 0 22px rgba(255,204,0,.22),8px 8px 0 rgba(0,0,0,.85);
+  padding:16px;display:none;
+}
+.pp-card-wrap{display:flex;justify-content:center;margin-bottom:14px;}
+.pp-card{
+  position:relative!important;left:auto!important;bottom:auto!important;
+  width:220px!important;min-width:220px!important;height:324px!important;
+  transform:none!important;cursor:default!important;z-index:auto!important;
+}
+.pp-card:hover{transform:none!important;box-shadow:0 0 0 2px var(--navy),0 0 0 5px var(--ccolor,#888),4px 4px 0 2px rgba(0,0,0,.8)!important;}
+.pp-card .ctype{font-size:.85rem;}
+.pp-card .cname{font-size:1.25rem;margin-bottom:6px;}
+.pp-card .cdesc{font-size:.92rem;line-height:1.42;}
+.pp-type{font-size:.52rem;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:4px;}
+.pp-name{font-size:.9rem;color:var(--ow);margin-bottom:8px;line-height:1.2;font-weight:900;}
+.pp-desc{font-size:.7rem;color:var(--ow);line-height:1.5;}
+.pp-cost{font-size:.65rem;color:var(--yy);margin-top:6px;}
+
+
+
+/* ── READABLE CARD GRID MODALS ── */
+.choice-card-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+  gap:12px;
+  max-height:58dvh;
+  overflow:auto;
+  padding:4px 4px 10px;
+}
+.choice-card{
+  background:var(--card-bg);
+  color:var(--navy);
+  border:4px solid var(--ccolor,var(--dim));
+  box-shadow:4px 4px 0 rgba(0,0,0,.7);
+  padding:10px;
+  min-height:238px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  cursor:pointer;
+  text-align:left;
+  font-family:var(--fui);
+  font-weight:900;
+}
+.choice-card:hover{filter:brightness(1.07);box-shadow:4px 4px 0 rgba(0,0,0,.7),0 0 16px var(--ccolor,var(--dim));}
+.choice-card.spell{--ccolor:var(--sc);}
+.choice-card.trap{--ccolor:var(--tc);}
+.choice-card.tithe{--ccolor:var(--mc);}
+.choice-card .slot-label{font-size:.48rem;color:var(--dim);letter-spacing:1px;text-transform:uppercase;}
+.choice-card .type{font-size:.58rem;color:var(--ccolor);letter-spacing:1px;text-transform:uppercase;border-bottom:2px solid rgba(0,0,0,.1);padding-bottom:3px;}
+.choice-card .name{font-size:.95rem;line-height:1.1;color:var(--navy);}
+.choice-card .desc{font-size:.72rem;line-height:1.32;color:rgba(10,8,4,.88);font-weight:800;}
+.choice-card .desc span{font-weight:900;}
+.choice-card.inert{cursor:default;}
+.choice-card.inert:hover{filter:none;box-shadow:4px 4px 0 rgba(0,0,0,.7);}
+.offering-click{cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+
+/* ── MODAL ── */
+#mov{position:fixed;inset:0;background:rgba(0,0,0,.86);z-index:700;
+  display:none;align-items:flex-end;justify-content:center;}
+#mov.open{display:flex;}
+#mov.rules-center{align-items:center;padding:18px;}
+#mov.rules-center #mbox{border:4px solid var(--yy);max-width:760px;width:min(760px,calc(100vw - 36px));box-shadow:8px 8px 0 rgba(0,0,0,.75),0 0 28px rgba(255,204,0,.18);}
+#mov.discard-selector{align-items:center;padding:18px;}
+#mov.discard-selector #mbox{border:4px solid var(--yy);max-width:1180px;width:min(1180px,calc(100vw - 36px));max-height:90dvh;box-shadow:8px 8px 0 rgba(0,0,0,.75),0 0 28px rgba(255,204,0,.18);}
+.discard-pile-grid{grid-template-columns:repeat(auto-fit,minmax(190px,220px));justify-content:center;gap:16px;max-height:70dvh;}
+#mbox{background:var(--navy2);border-top:4px solid var(--yy);
+  border-left:4px solid var(--yy);border-right:4px solid var(--yy);
+  padding:18px 20px 26px;width:100%;max-width:560px;max-height:78dvh;overflow-y:auto;}
+#mttl{font-size:.88rem;color:var(--yy);text-shadow:0 0 8px var(--yy);
+  letter-spacing:1px;margin-bottom:12px;text-transform:uppercase;}
+#mbdy{font-size:.78rem;color:var(--ow);line-height:1.65;margin-bottom:14px;}
+#mbtns{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* ── DRAFT ── */
+#draft-screen{
+  --draft-card-h:clamp(260px,28vh,340px);
+  --draft-card-w:calc(var(--draft-card-h)*.68);
+  --draft-gap-x:clamp(16px,1.2vw,28px);
+  --draft-gap-y:clamp(16px,2vh,30px);
+  position:fixed;inset:0;z-index:800;background:var(--navy);
+  display:none;flex-direction:column;
+}
+#draft-screen.active{display:flex;}
+#draft-header{background:var(--navy2);border-bottom:4px solid var(--yy);
+  padding:clamp(16px,1.4vw,24px) clamp(22px,2vw,34px);flex-shrink:0;display:flex;align-items:center;gap:18px;}
+#draft-header h2{font-size:clamp(1.05rem,1vw,1.45rem);color:var(--yy);letter-spacing:3px;}
+#draft-status{font-size:clamp(.86rem,.8vw,1.12rem);color:var(--ow);margin-left:auto;}
+#draft-progress{font-size:clamp(.8rem,.72vw,1rem);color:var(--yg);}
+#draft-hand{
+  --draft-cols:5;
+  flex:1;overflow-y:auto;padding:clamp(18px,2vh,32px) clamp(22px,2vw,40px);
+  display:grid;
+  grid-template-columns:repeat(var(--draft-cols), minmax(var(--draft-card-w), var(--draft-card-w)));
+  grid-auto-rows:min-content;
+  gap:var(--draft-gap-y) var(--draft-gap-x);
+  align-content:center;justify-content:center;
+}
+.draft-card-wrap{display:flex;flex-direction:column;align-items:center;gap:clamp(9px,1vh,14px);min-width:0;}
+.draft-card-wrap .card{
+  position:static;width:var(--draft-card-w);min-width:var(--draft-card-w);height:var(--draft-card-h);
+  padding:clamp(9px,.7vw,13px) clamp(8px,.65vw,12px) clamp(7px,.55vw,10px);
+}
+.draft-card-wrap .card:hover{transform:translateY(-10px) scale(1.035)!important;}
+.draft-card-wrap .card::before{font-size:clamp(1.25rem,1.15vw,1.65rem);top:5px;left:7px;}
+.draft-card-wrap .card .ctype{font-size:clamp(.68rem,.64vw,.9rem);padding-left:clamp(22px,1.4vw,30px);}
+.draft-card-wrap .card .cname{font-size:clamp(.96rem,.9vw,1.22rem);line-height:1.08;margin-bottom:4px;}
+.draft-card-wrap .card .cdesc{font-size:clamp(.68rem,.67vw,.9rem) !important;line-height:1.26;overflow:hidden;}
+.draft-pick-btn{padding:clamp(9px,.8vw,13px) clamp(22px,1.8vw,34px);border:0;font-family:var(--fui);font-weight:900;
+  font-size:clamp(.78rem,.72vw,1rem);cursor:pointer;text-transform:uppercase;letter-spacing:.8px;
+  background:var(--yy);color:var(--navy);box-shadow:4px 4px 0 #886600;}
+.draft-pick-btn.picked{background:var(--yg);color:var(--navy);box-shadow:none;pointer-events:none;}
+#draft-footer{background:var(--navy2);border-top:3px solid var(--yy);
+  padding:clamp(14px,1.3vw,22px) clamp(22px,2vw,34px);flex-shrink:0;display:flex;align-items:center;gap:18px;}
+#draft-deck-preview{flex:1;font-size:clamp(.82rem,.76vw,1.08rem);color:var(--ow);}
+#draft-waiting{font-size:clamp(.78rem,.7vw,1rem);color:var(--dim);animation:blk .8s infinite;}
+#draft-pass-btn{padding:clamp(11px,.95vw,16px) clamp(26px,2vw,38px);border:0;font-family:var(--fui);font-weight:900;
+  font-size:clamp(.84rem,.78vw,1.08rem);cursor:pointer;text-transform:uppercase;letter-spacing:.8px;
+  background:var(--yy);color:var(--navy);box-shadow:4px 4px 0 #886600;}
+#draft-pass-btn:disabled{opacity:.28;cursor:not-allowed;pointer-events:none;}
+
+/* ── DRAFTED DECK REVIEW ── */
+#deck-reviewer{
+  --review-card-w:clamp(142px,8.4vw,190px);
+  position:fixed;inset:0;z-index:850;background:rgba(5,5,18,.96);
+  display:none;flex-direction:column;padding:clamp(16px,1.5vw,28px);gap:14px;
+}
+#deck-reviewer.show{display:flex;}
+#deck-review-header{display:flex;align-items:flex-end;gap:18px;border-bottom:4px solid var(--yy);padding-bottom:12px;flex-shrink:0;}
+#deck-review-title{font-size:clamp(1.05rem,1.1vw,1.5rem);color:var(--yy);letter-spacing:3px;text-transform:uppercase;text-shadow:0 0 9px var(--yy);}
+#deck-review-sub{font-size:clamp(.72rem,.72vw,1rem);color:var(--ow);margin-left:auto;text-align:right;}
+#deck-review-cards{
+  flex:1;overflow:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(var(--review-card-w),var(--review-card-w)));
+  grid-auto-rows:min-content;gap:16px;align-content:start;justify-content:center;padding:8px 4px 16px;
+}
+.deck-review-card-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;}
+#deck-review-cards .card{position:static;width:var(--review-card-w);min-width:var(--review-card-w);height:calc(var(--review-card-w)*1.42);padding:8px 7px 6px;}
+#deck-review-cards .card:hover{transform:translateY(-7px) scale(1.035)!important;}
+#deck-review-cards .card .ctype{font-size:clamp(.55rem,.55vw,.76rem);padding-left:20px;}
+#deck-review-cards .card .cname{font-size:clamp(.78rem,.72vw,1rem);line-height:1.08;}
+#deck-review-cards .card .cdesc{font-size:clamp(.54rem,.54vw,.72rem);line-height:1.22;overflow:hidden;}
+.deck-review-index{font-size:.55rem;color:var(--dim);}
+#deck-review-footer{display:flex;justify-content:center;border-top:2px solid rgba(255,204,0,.18);padding-top:14px;flex-shrink:0;}
+#deck-review-ok{padding:12px 42px;border:0;font-family:var(--fui);font-weight:900;font-size:1rem;cursor:pointer;text-transform:uppercase;letter-spacing:1px;background:var(--yy);color:var(--navy);box-shadow:5px 5px 0 #886600;}
+#deck-review-ok:hover{background:var(--yy2);}
+
+/* card-detail panel */
+#card-detail{position:fixed;bottom:0;left:0;right:0;z-index:400;background:var(--navy2);
+  border-top:3px solid var(--yy);padding:14px 16px 20px;
+  transform:translateY(100%);transition:transform .2s;display:flex;gap:12px;}
+#card-detail.show{transform:translateY(0);}
+#cd-icon{
+  width:110px;height:160px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+#cd-icon .pp-card{
+  width:100%!important;min-width:100%!important;height:100%!important;
+}
+#cd-info{flex:1;min-width:0;}
+#cd-type{font-size:.48rem;text-transform:uppercase;color:var(--dim);margin-bottom:3px;}
+#cd-name{font-size:1rem;color:var(--ow);margin-bottom:5px;}
+#cd-desc{font-size:.74rem;color:var(--ow);line-height:1.4;}
+#cd-cost{font-size:.72rem;color:var(--yy);margin-top:4px;}
+#cd-close{position:absolute;top:12px;right:14px;font-size:.75rem;color:var(--dim);
+  cursor:pointer;background:none;border:none;font-family:var(--fui);font-weight:900;}
+</style>
+</head>
+<body>
+
+<!-- WIN -->
+<div id="s-win">
+  <div id="win-ttl">THE RITE IS COMPLETE</div>
+  <div id="win-sub"></div>
+  <div class="sep"></div>
+  <button class="btn bg" onclick="location.reload()">PLAY AGAIN</button>
+</div>
+
+<!-- TARGET WARNING BORDER -->
+<div id="target-alert" aria-hidden="true"></div>
+
+<!-- DRAFT SCREEN -->
+<div id="draft-screen">
+  <div id="draft-header">
+    <h2>DRAFT PHASE</h2>
+    <div style="display:flex;flex-direction:column;gap:1vw;margin-left:auto;">
+      <div id="draft-status">Round 1 · Pass 1 of 5</div>
+      <div id="draft-progress">Your deck: 0 / 20 cards</div>
+    </div>
+  </div>
+  <div id="draft-hand"></div>
+  <div id="draft-footer">
+    <div id="draft-deck-preview">Pick 2 cards, then pass the rest.</div>
+    <div id="draft-waiting" style="display:none;">Waiting for opponents...</div>
+    <button id="draft-pass-btn" onclick="draftPassHand()" disabled>Pass Hand ▶</button>
+  </div>
+</div>
+
+<!-- DRAFTED DECK REVIEW -->
+<div id="deck-reviewer">
+  <div id="deck-review-header">
+    <h3 id="deck-review-title">Your Drafted Deck</h3>
+    <div id="deck-review-sub">20 drafted cards</div>
+  </div>
+  <div id="deck-review-cards"></div>
+  <div id="deck-review-footer">
+    <button id="deck-review-ok" onclick="confirmDeckReview()">OK</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game">
+
+  <div id="topbar">
+    <h2>RITE OF OFFERINGS</h2>
+    <span id="pbadge">—</span>
+    <span id="player-count-badge">4P</span>
+    <span id="rbanner">⚡ RESPOND</span>
+    <span id="tinfo"></span>
+    <button class="btn bgr" onclick="showRulesTutorial(false)">Rules</button>
+    <button class="btn bgr" onclick="newGame()">↺ New / Players</button>
+  </div>
+
+  <div id="main-area">
+
+    <!-- LEFT: public piles + opponent panels -->
+    <div id="left-sidebar">
+      <div class="sidebar-label">Public Deck</div>
+      <div class="pile-pair">
+        <div class="pile pdraw" title="Public draw pile">
+          <span class="pnum" id="dkct">—</span>
+          <span class="plbl">Draw</span>
+        </div>
+        <div class="pile pdisc" title="Click to view discard pile" onclick="openDiscardViewer()" style="cursor:pointer;">
+          <div class="ptop" id="dtop">—</div>
+          <span class="plbl" id="dsct">Disc</span>
+        </div>
+      </div>
+      <!-- Draw phase choice -->
+      <div id="draw-choice">
+        <div class="sidebar-label">Draw from:</div>
+        <button class="draw-btn draw-pub" onclick="hDrawFrom('public')">Public Deck</button>
+        <button class="draw-btn draw-per" id="btn-draw-personal" onclick="hDrawFrom('personal')">Personal Deck</button>
+      </div>
+      <div style="height:1px;background:rgba(255,204,0,.1);margin:4px 0;"></div>
+      <div class="sidebar-label">Opponents</div>
+      <div id="opponents-list"></div>
+    </div>
+
+    <!-- CENTER: RZ + opponents top + player bottom -->
+    <div id="center-table">
+
+      <!-- Resolution Zone -->
+      <div id="rz-area">
+        <div id="rz-title">⊕ RESOLUTION ZONE</div>
+        <div id="rz-slots">
+          <div class="rz-slot" id="rz0"><span class="rzmt-empty">—</span></div>
+          <div class="rz-slot" id="rz1"><span class="rzmt-empty">—</span></div>
+          <div class="rz-slot" id="rz2"><span class="rzmt-empty">—</span></div>
+          <div class="rz-slot" id="rz3"><span class="rzmt-empty">—</span></div>
+          <div class="rz-slot" id="rz4"><span class="rzmt-empty">—</span></div>
+          <div class="rz-slot" id="rz5"><span class="rzmt-empty">—</span></div>
+          <div class="rz-slot" id="rz6"><span class="rzmt-empty">—</span></div>
+        </div>
+      </div>
+
+      <!-- Player area -->
+      <div id="player-area">
+
+        <!-- Player info row -->
+        <div id="zone-row">
+          <!-- Blessing Zone -->
+          <div id="pmon"><span class="lbl">Blessing</span><div class="empty">+</div></div>
+          <!-- Traps -->
+          <div class="ptcol" id="ptrow"></div>
+        </div>
+
+        <div id="player-info-row">
+          <!-- Offering count -->
+          <div id="p-offering-display">
+            <div class="p-off-big" id="pbig">0</div>
+            <div class="p-off-lbl">/ 15 offerings</div>
+            <div style="font-size:.5rem;color:var(--dim);margin-top:2px;" id="pstat">Hand: 0</div>
+          </div>
+        </div>
+
+        <!-- Hand + personal deck -->
+        <div id="p-deck-area">
+          <div id="hand-wrap"><div id="hand"></div></div>
+          <div id="p-personal-deck" title="Click to view drafted cards" onclick="openDraftedDeckViewer()">
+            <span class="pnum" id="pdkct">—</span>
+            <span class="plbl">My Deck</span>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /center-table -->
+
+    <!-- RIGHT: always-visible log panel -->
+    <div id="log-panel" class="open">
+      <div id="log-toggle" onclick="toggleLog()">LOG</div>
+      <div id="log-inner">
+        <div id="log-header">Event Log</div>
+        <div id="log"></div>
+      </div>
+    </div>
+
+  </div><!-- /main-area -->
+
+  <!-- Action bar (centered) -->
+  <div id="abar">
+    <button class="btn bg" id="bplay" onclick="hPlay()" disabled>Play</button>
+    <button class="btn bg" id="boffer" onclick="hOffer()" disabled>Offer</button>
+    <button class="btn bb" id="bblessing" onclick="hBlessing()" disabled>Blessing</button>
+    <button class="btn bgr" id="bpass" onclick="hPass()" disabled>End Turn</button>
+  </div>
+
+</div><!-- /game -->
+
+<!-- Card detail panel (mobile tap) -->
+<div id="card-detail">
+  <button id="cd-close" onclick="closeCardDetail()">✕</button>
+  <div id="cd-icon"></div>
+  <div id="cd-info">
+    <div id="cd-type"></div>
+    <div id="cd-name"></div>
+    <div id="cd-desc"></div>
+    <div id="cd-cost"></div>
+  </div>
+</div>
+
+<!-- RESPONSE POPUP -->
+<div id="resp-popup">
+  <div id="resp-popup-title">⚡ YOU MAY RESPOND</div>
+  <div id="resp-popup-card"></div>
+  <div id="resp-popup-btns">
+    <button class="btn bb" onclick="hPass()">Pass Response</button>
+  </div>
+</div>
+
+<!-- DISCARD VIEWER -->
+<div id="discard-viewer">
+  <button class="dv-close" onclick="closeDiscardViewer()">✕ Close</button>
+  <h3>Discard Pile</h3>
+  <div id="discard-cards"></div>
+</div>
+
+<!-- CARD POPUP -->
+<div id="card-popup" style="display:none;">
+  <div class="pp-card-wrap"><div class="pp-card"></div></div>
+  <div class="pp-type"></div>
+  <div class="pp-name"></div>
+  <div class="pp-desc"></div>
+  <div class="pp-cost"></div>
+</div>
+
+<!-- MODAL -->
+<div id="mov"><div id="mbox">
+  <div id="mttl"></div><div id="mbdy"></div><div id="mbtns"></div>
+</div></div>
+
+<!-- TOOLTIP -->
+<div id="tip"><div class="tty" id="tty"></div><div class="ttn" id="ttn"></div><div id="ttd"></div><div class="ttc" id="ttc"></div></div>
+
+<script>
+
+'use strict';
+
+// ─────────────────────────────────────────
+// CARD DEFINITIONS
+// ─────────────────────────────────────────
+const DEF = {
+  // ════ SPELLS ════
+  S_TITHE:{id:'S_TITHE',name:'Quick Ritual',type:'spell',
+    req:null,cost:{discard:2},target:'self',
+    desc:'[Cost] Discard 2. [Effect] You may offer 2 extra this turn.',
+    fx:(gs,s)=>{gs.P[s].bonus+=2;L(N(s,gs)+' may offer +2 slots this turn','good');}},
+
+  S_GRAVE:{id:'S_GRAVE',name:'Grave Tribute',type:'spell',
+    req:null,cost:{discard:1},target:'self',
+    desc:'[Cost] Discard 1. [Effect] You may make 1 additional offering this turn.',
+    fx:(gs,s)=>{gs.P[s].offersLeft+=1;L(N(s,gs)+' gains +1 normal offering this turn','good');}},
+
+  S_HOLLOW:{id:'S_HOLLOW',name:'Hollow Tribute',type:'spell',
+    req:null,cost:{offer:2},target:'self',
+    desc:'[Cost] Remove 2 own offerings. [Effect] You may offer 3 extra this turn.',
+    fx:(gs,s)=>{gs.P[s].bonus+=3;L(N(s,gs)+' may offer +3 slots this turn','good');}},
+
+  S_DCOL:{id:'S_DCOL',name:'Dark Collection',type:'spell',
+    req:null,cost:{discard:2},target:'opp',
+    desc:'[Cost] Discard 2. [Effect] Target opponent removes 1 offering.',
+    fx:(gs,s,t)=>{rmOff(gs,t,1);}},
+
+  S_MRUIN:{id:'S_MRUIN',name:'Mass Ruin',type:'spell',
+    req:null,cost:{discard:3},target:'all_opp',
+    desc:'[Cost] Discard 3. [Effect] Each opponent removes 1 filled offering slot.',
+    fx:(gs,s)=>{gs.P.forEach((_,i)=>{if(i!==s)rmOff(gs,i,1);});}},
+
+  S_STEAL:{id:'S_STEAL',name:'Underhanded Steal',type:'spell',
+    req:null,cost:{offer:1},target:'opp',
+    desc:'[Cost] Remove 1 own offering. [Effect] Steal 1 offering from target and add to your hand.',
+    fx:(gs,s,t)=>{stlOff(gs,s,t);}},
+
+  S_MUTUAL:{id:'S_MUTUAL',name:'Mutual Destruction',type:'spell',
+    req:null,cost:{offer:1},target:'all_opp',
+    desc:'[Cost] Remove 1 own offering. [Effect] All other players remove 1 offering.',
+    fx:(gs,s)=>{gs.P.forEach((_,i)=>{if(i!==s)rmOff(gs,i,1);});}},
+
+  S_TAKEB:{id:'S_TAKEB',name:'Take Back',type:'spell',
+    req:(gs,pi)=>gs.disc.length>0,cost:{},target:'self',
+    desc:'[Req] Discard pile not empty. [Effect] Return 1 card from discard to your hand.',
+    fx:(gs,s)=>{doRebirth(gs,s);}},
+
+  S_1FOR1:{id:'S_1FOR1',name:'1 For 1',type:'spell',
+    req:null,cost:{discard:1},target:'self',
+    desc:'[Cost] Discard 1. [Effect] Draw 1.',
+    fx:(gs,s)=>{drw(gs,s,1,true);L(N(s,gs)+' draws 1','hi');}},
+
+  S_SAC:{id:'S_SAC',name:'Grand Sacrifice',type:'spell',
+    req:(gs,pi)=>gs.P[pi].blessing!==null && (DEF[gs.P[pi].blessing.id]?.blessingCost||0)>=3,
+    cost:{rmblessing:true},target:'self',
+    desc:'[Req] Must have a 3-offering-cost Tribute in Blessing Zone. [Cost] Remove that Tribute. [Effect] You may offer 3 extra this turn.',
+    fx:(gs,s)=>{gs.P[s].bonus+=3;L(N(s,gs)+' removes their Blessing and may offer +3 slots','good');}},
+
+  S_DENY:{id:'S_DENY',name:'Deny the Rite',type:'spell',
+    req:null,cost:{discard:1},target:'opp',
+    desc:'[Cost] Discard 1. [Effect] Target opponent cannot make their normal offering this turn.',
+    fx:(gs,s,t)=>{gs.P[t].denied=true;L(N(s,gs)+' denies '+N(t,gs)+"'s normal offering",'warn');}},
+
+  S_SMITE:{id:'S_SMITE',name:'Smite',type:'spell',
+    req:(gs,pi,tgt)=>tgt!=null&&gs.P[tgt]?.blessing!==null,
+    cost:{discard:1},target:'opp',
+    desc:'[Req] Target must have a Tribute in Blessing Zone. [Cost] Discard 1. [Effect] Destroy that Tribute.',
+    fx:(gs,s,t)=>{
+      if(t==null||!gs.P[t].blessing){L('No Blessing to destroy','warn');return;}
+      const r=gs.P[t].blessing; gs.P[t].blessing=null;
+      if(DEF[r.id]?.onDiscard)DEF[r.id].onDiscard(gs,t);
+      gs.disc.push(r);
+      L(N(s,gs)+' destroys '+N(t,gs)+"'s "+r.name,'warn');
+    }},
+
+  S_STROBBERY:{id:'S_STROBBERY',name:'Daylight Strobbery',type:'spell',
+    req:(gs,pi,tgt)=>tgt!=null&&gs.P[tgt]?.hand.length>0,
+    cost:{},target:'opp',
+    desc:'[Req] Target must have cards in hand. [Effect] Take 1 random card from target hand.',
+    fx:(gs,s,t)=>{
+      const h=gs.P[t].hand;
+      if(!h.length){L(N(t,gs)+' has no cards','');return;}
+      const c=h.splice(0|Math.random()*h.length,1)[0];
+      gs.P[s].hand.push(c);L(N(s,gs)+' steals a card from '+N(t,gs),'warn');
+    }},
+
+  S_BSTROBERRY:{id:'S_BSTROBERRY',name:'Blatant Strobbery',type:'spell',
+    req:(gs,pi,tgt)=>tgt!=null&&gs.P[tgt]?.hand.length>0,
+    cost:{discard:1},target:'opp',
+    desc:'[Req] Target must have cards in hand. [Cost] Discard 1. [Effect] Choose 1 card from target hand, add it to yours.',
+    fx:(gs,s,t)=>{blatantStrobbery(gs,s,t);}},
+
+  S_FPOINT:{id:'S_FPOINT',name:'Finger Point',type:'spell',
+    req:(gs,pi,tgt)=>canFingerPoint(gs,pi,tgt),
+    cost:{},target:'player',
+    desc:'[Req] When you are targeted for an effect. [Effect] Change the target to another player.',
+    fx:(gs,s,t)=>{fingerPointEffect(gs,s,t);}},
+
+  S_DRAW1:{id:'S_DRAW1',name:'Sip of Avarice',type:'spell',
+    req:null,cost:{},target:'self',
+    desc:'[Effect] Draw 1 card from the public deck.',
+    fx:(gs,s)=>{drw(gs,s,1,true);L(N(s,gs)+' draws 1','hi');}},
+
+  S_DRAW2:{id:'S_DRAW2',name:'Greedy Mug',type:'spell',
+    req:null,cost:{},target:'self',
+    desc:'[Effect] Draw 2 cards from the public deck.',
+    fx:(gs,s)=>{drw(gs,s,2,true);L(N(s,gs)+' draws 2','hi');}},
+
+  S_DSPY:{id:'S_DSPY',name:'Deck Spy',type:'spell',
+    req:(gs,pi)=>gs.deck.length>0,cost:{},target:'self',
+    desc:'[Effect] Look at the top 3 cards of the draw pile, add 1 to your hand and return the other cards in any order.',
+    fx:(gs,s)=>{
+      const top=gs.deck.slice(-3).reverse();
+      if(!gs.P[s].human){L(N(s,gs)+' spies the top 3 cards','');return;}
+      const names=top.map(c=>c.name).join(', ');
+      L('Top 3: '+names+' (pick 1 to keep)','hi');
+      gs._glimpsePending={src:s,top:top};
+    }},
+
+  S_TEARS:{id:'S_TEARS',name:'Tears of the Lament',type:'spell',
+    req:(gs,pi)=>gs.deck.length>0,cost:{},target:'self',
+    desc:'[Effect] Mill 5 cards from the Public deck.',
+    fx:(gs,s)=>{millCards(gs,s,5,'public');}},
+
+  T_LSCREAM:{id:'T_LSCREAM',name:'Lamenting Scream',type:'trap',
+    req:null,cost:{},trigger:'toff',
+    desc:'[Req] An opponent targets your offering. [Effect] Negate that effect. Mill 2 cards from that opponent\'s personal deck.',
+    fx:(gs,s,t)=>{
+      negTop(gs,s);
+      if(t!=null){
+        millCards(gs,t,2,'personal');
+        L(N(s,gs)+" negates and mills 2 from "+N(t,gs)+"'s deck",'warn');
+      }
+    }},
+
+  S_WARD:{id:'S_WARD',name:'Minor Protection Seal',type:'spell',
+    req:null,cost:{},target:'self',
+    desc:'[Effect] Your offering slots cannot be targeted this turn.',
+    fx:(gs,s)=>{gs.P[s].warded=true;L(N(s,gs)+' is warded this turn','hi');}},
+
+  S_PULSE:{id:'S_PULSE',name:'Void Pulse',type:'spell',
+    req:(gs,pi,tgt)=>tgt!=null&&gs.P[tgt]?.hand.length>0,
+    cost:{},target:'opp',
+    desc:'[Req] Target must have cards in hand. [Effect] Target opponent discards 1 card.',
+    fx:(gs,s,t)=>{fDisc(gs,t,1);}},
+
+  S_HOUSE:{id:'S_HOUSE',name:'Housekeeping',type:'spell',
+    req:(gs,pi,tgt)=>tgt!=null&&gs.P[tgt]?.traps.some(Boolean),
+    cost:{},target:'player',
+    desc:'[Effect] Target a player; that player removes all trap cards in their trap zone.',
+    fx:(gs,s,t)=>{
+      if(t==null){L('No target for Housekeeping','warn');return;}
+      clrTraps(gs,t);
+    }},
+
+  S_VASE:{id:'S_VASE',name:'Vase of Voracity',type:'spell',
+    req:(gs,pi)=>gs.P[pi]?.pdeck?.length>0,cost:{},target:'self',
+    desc:'[Effect] Draw 1 card from your personal deck.',
+    fx:(gs,s)=>{drawPersonal(gs,s,1);}},
+
+  S_RJUG:{id:'S_RJUG',name:'Ravenous Jug',type:'spell',
+    req:(gs,pi)=>gs.P[pi]?.pdeck?.length>0,cost:{},target:'self',
+    desc:'[Effect] Draw 2 cards from your personal deck.',
+    fx:(gs,s)=>{drawPersonal(gs,s,2);}},
+
+  S_SCROUNGE:{id:'S_SCROUNGE',name:'Scrounge',type:'spell',
+    req:(gs,pi)=>gs.disc.length>0,cost:{},target:'self',
+    desc:'[Effect] Add 1 card from discard to your hand.',
+    fx:(gs,s)=>{doRebirth(gs,s);}},
+
+  S_HTRAP:{id:'S_HTRAP',name:'Handtrap',type:'spell',
+    req:(gs,pi)=>gs.rz.length>0 && gs.rz[gs.rz.length-1]?.card?.type!=='trap',cost:{},target:'self',
+    desc:'[Effect] Negate the last card on the Resolution chain. Cannot respond to Traps.',
+    fx:(gs,s)=>{negTop(gs,s);}},
+
+  // ════ TRAPS ════
+  T_NEGATE:{id:'T_NEGATE',name:'Negate',type:'trap',
+    req:null,cost:{},trigger:'any',
+    desc:'[Effect] Negate the last card on the Resolution chain.',
+    fx:(gs,s)=>{negTop(gs,s);}},
+
+  T_GNEGATE:{id:'T_GNEGATE',name:'Great Negate',type:'trap',
+    req:null,cost:{},trigger:'any',
+    desc:'[Effect] Negate the card before this card. Players may only respond to this card with another Great Negate, or Greatest Negate.',
+    fx:(gs,s)=>{negTop(gs,s);}},
+
+  T_GRTSTNEGATE:{id:'T_GRTSTNEGATE',name:'Greatest Negate',type:'trap',
+    req:null,cost:{},trigger:'any',
+    desc:'[Effect] Negate the card before this card. Players cannot respond to this card.',
+    fx:(gs,s)=>{negTop(gs,s);}},
+
+  T_CNEGATE:{id:'T_CNEGATE',name:'Chain Negate',type:'trap',
+    req:null,cost:{},trigger:'any',
+    desc:'[Effect] Negate every card before this card in the resolution chain.',
+    fx:(gs,s)=>{
+      if(!gs.rz.length) { L('Nothing to negate',''); return; }
+      let n=0;
+      for(let i=gs.rz.length-1;i>=0;i--){
+        const e=gs.rz[i];
+        if(!e.negated){ markRZNegated(gs,e,i,s); n++; }
+      }
+      L(logName(gs,s)+' negates '+n+' card'+(n!==1?'s':'')+' in the chain; '+(n===1?'it':'they')+' will not resolve','warn');
+    }},
+
+  T_NOU:{id:'T_NOU',name:'No-U',type:'trap',
+    req:null,cost:{},trigger:'any',
+    desc:'[Req] An opponent is targeting you for an effect. [Effect] Negate it, and apply that effect on the opponent.',
+    fx:(gs,s,t)=>{reflectTargetedEffect(gs,s,t);}},
+
+  T_THOLE:{id:'T_THOLE',name:'Trap Hole',type:'trap',
+    req:null,cost:{},trigger:'blessing',
+    desc:'[Req] An opponent is playing a Tribute as a Blessing. [Effect] Destroy that Tribute.',
+    fx:(gs,s,t)=>{
+      if(t!=null&&gs.P[t].blessing){
+        const r=gs.P[t].blessing; gs.P[t].blessing=null;
+        if(DEF[r.id]?.onDiscard)DEF[r.id].onDiscard(gs,t);
+        gs.disc.push(r);
+        L(N(s,gs)+' snares '+N(t,gs)+"'s "+r.name,'warn');
+      }
+    }},
+
+  S_COPYC:{id:'S_COPYC',name:'Copycat',type:'spell',
+    req:(gs,pi)=>gs.rz.length>0&&gs.rz[gs.rz.length-1].card.type==='spell',
+    cost:{},target:'self',
+    desc:'[Req] Target a spell card on the resolution chain. [Effect] This spell becomes the effect of that card.',
+    fx:(gs,s)=>{mirTop(gs,s);}},
+
+  T_ODENIAL:{id:'T_ODENIAL',name:'Offal Denial',type:'trap',
+    req:null,cost:{},trigger:'moff',
+    desc:'[Req] An opponent is attempting their normal offering. [Effect] Negate it.',
+    fx:(gs,s,t)=>{if(t!=null){gs.P[t].denied=true;L(N(s,gs)+' denies '+N(t,gs)+"'s normal offering",'warn');}}},
+
+  T_UNFORT:{id:'T_UNFORT',name:'Unfortunate Event',type:'trap',
+    req:null,cost:{},trigger:'moff',
+    desc:'[Req] An opponent has already placed at least 2 offerings this turn and is attempting a 3rd. [Effect] Remove all offerings they placed this turn. Replace them with this card as 1 filled offering slot.',
+    fx:(gs,s,t)=>{
+      if(t==null)return;
+      const p=gs.P[t];
+      if((p.offsThisTurn||0)>=2){
+        // Remove ALL offerings placed this turn
+        let removed=0;
+        for(let i=0;i<15&&removed<p.offsThisTurn;i++) if(p.offerings[i]){p.offerings[i]=false;if(p.offeredCards)p.offeredCards[i]=null;removed++;}
+        p.offsThisTurn=0;
+        // Place this trap card as exactly 1 filled offering slot for the activating player
+        const slot=NS(gs.P[s]);
+        if(slot!==-1){ gs.P[s].offerings[slot]=true; if(!gs.P[s].offeredCards)gs.P[s].offeredCards=Array(15).fill(null); gs.P[s].offeredCards[slot]={...DEF['T_UNFORT'],uid:'T_UNFORT_offered_'+UID++}; gs.P[s].offsThisTurn=(gs.P[s].offsThisTurn||0)+1; }
+        // Trap card goes to discard (consumed)
+        gs.disc.push({...DEF['T_UNFORT'],uid:'T_UNFORT_used_'+UID++});
+        L(N(s,gs)+"'s Unfortunate Event removes all offerings "+N(t,gs)+' placed this turn; '+N(s,gs)+' gains 1 slot','warn');
+        if(OC(gs.P[s])>=15){gs.over=true;showWin(s,gs);}
+      }
+    }},
+
+  // ════ TITHES ════
+  // Blessing effects apply while in Blessing Zone (checked via gs.P[pi].blessing?.id)
+  // onOffer fires when offered as an offering slot
+  // onDiscard fires when destroyed/discarded from Blessing Zone or hand
+  // blessingCost = offerings to remove when played as Blessing
+
+  M_GRAVE:{id:'M_GRAVE',name:'Gravemind',type:'tithe',blessingCost:2,
+    desc:'[Cost] 2 offerings. [Effect] Blessing: You may offer 1 extra per turn.',
+    onOffer:null,
+    onDiscard:null,
+    blessingFx:null}, // handled via passive checks using blessing?.id
+
+  M_HECA:{id:'M_HECA',name:'Hecatoncherie',type:'tithe',blessingCost:2,
+    desc:'[Cost] 2 offerings. [Effect] Blessing: Each time you draw a card via a card effect, draw 1 additional card from the public deck. Your hand size has no limit.',
+    onOffer:null,onDiscard:null,blessingFx:null},
+
+  M_SENT:{id:'M_SENT',name:'Stone Sentinel',type:'tithe',blessingCost:2,
+    desc:'[Cost] 2 offerings. [Effect] Blessing: Your offerings can’t be removed. When this card is removed from blessing, draw 2 cards.',
+    onOffer:null,
+    onDiscard:(gs,i)=>{drw(gs,i,2,true);L(N(i,gs)+"'s Sentinel falls — draws 2",'hi');}},
+
+  M_TMASTER:{id:'M_TMASTER',name:'Trap Master',type:'tithe',blessingCost:1,
+    desc:'[Cost] 1 offering. [Effect] Blessing: your face-down traps cannot be targeted or destroyed.',
+    onOffer:null,onDiscard:null},
+
+  M_VAULT:{id:'M_VAULT',name:'The Vault',type:'tithe',blessingCost:1,
+    desc:'[Cost] 1 offering. [Effect] Blessing: once per turn, your offering and hand is protected from removal effects.',
+    onOffer:null,onDiscard:null},
+
+  M_SIPH:{id:'M_SIPH',name:'Soul Siphon',type:'tithe',blessingCost:1,
+    desc:'[Cost] 1 offering. [Effect] Blessing: when any opponent fills an offering slot, draw 1 card.',
+    onOffer:null,onDiscard:null},
+
+  M_DCOLLECT:{id:'M_DCOLLECT',name:'Debt Collector',type:'tithe',blessingCost:2,
+    desc:'[Cost] 2 offering. [Effect] Blessing: Once per turn, all players give you 1 card from their hand.',
+    onOffer:null,onDiscard:null},
+
+  M_THFCAT:{id:'M_THFCAT',name:'Thieving Cat',type:'tithe',blessingCost:1,
+    desc:'[Cost] 1 offering. [Effect] Blessing: Once per turn, target 1 player to give you a card from their hand.',
+    onOffer:null,onDiscard:null},
+
+  M_OALMS:{id:'M_OALMS',name:'Offering alms',type:'tithe',blessingCost:0,
+    desc:'[Effect] When offered, draw 1 card.',
+    onOffer:(gs,i)=>{drw(gs,i,1,true);L(N(i,gs)+' offers Offering alms — draws 1','good');},
+    ofv:1,onDiscard:null},
+
+  M_OFEAST:{id:'M_OFEAST',name:'Offering feast',type:'tithe',blessingCost:0,
+    desc:'[Effect] When offered, draw 2 cards.',
+    onOffer:(gs,i)=>{drw(gs,i,2,true);L(N(i,gs)+"'s Offering feast triggers — draws 2",'hi');},
+    ofv:1,onDiscard:null},
+
+
+  // ════ THE LAMENT ARCHETYPE ════
+  // Mill = send top N cards of a deck to the public discard pile
+  // "Set as offering" = immediately place into next available offering slot (no cost, no offersLeft used)
+  // onMill fires when this card is milled from any deck
+  // Havnys is special: activated by discarding from hand (not a normal play)
+
+  M_EIREN:{id:'M_EIREN',name:'Eiren, the Lament',type:'tithe',blessingCost:0,ofv:1,
+    desc:'[Req] This card was milled from your personal deck. [Effect] Mill 2 cards from your personal deck. Then set this card as an offering.',
+    onOffer:null, onDiscard:null,
+    onMill:(gs,pi,src,card)=>{
+      if(src!=='personal') return; // only triggers from personal deck mill
+      millCards(gs,pi,2,'personal');
+      setAsOffering(gs,pi,card);
+      L(N(pi,gs)+"'s Eiren milled — mills 2, set as offering",'good');
+    }},
+
+  M_MERLY:{id:'M_MERLY',name:'Merly, the Lament',type:'tithe',blessingCost:0,ofv:1,
+    desc:'[Req] This card was milled from any deck. [Effect] Set this card as an offering.',
+    onOffer:null, onDiscard:null,
+    onMill:(gs,pi,src,card)=>{
+      setAsOffering(gs,pi,card);
+      L(N(pi,gs)+"'s Merly milled — set as offering",'good');
+    }},
+
+  M_HAVNYS:{id:'M_HAVNYS',name:'Havnys, the Lament',type:'tithe',blessingCost:0,ofv:1,
+    desc:'[Cost] Discard this card from your hand. [Effect] Mill 3 cards from your personal deck. Then set this card as an offering.',
+    onOffer:null, onDiscard:null,
+    onMill:null, // Milling Havnys does NOT trigger its effect — hand discard only
+    // Activated via hActivateHavnys when human selects it; AI calls activateHavnys
+    activateFx:(gs,pi,card=null)=>{
+      millCards(gs,pi,3,'personal');
+      setAsOffering(gs,pi,card);
+      L(N(pi,gs)+' activates Havnys — mills 3, set as offering','good');
+    }},
+
+
+  M_HEART_LAMENT:{id:'M_HEART_LAMENT',name:'Heart of the Lament',type:'tithe',blessingCost:2,ofv:1,
+    desc:'[Cost] 2 offerings. [Effect] Blessing: Once during your turn, you may shuffle 3 cards from the discard pile into your personal deck, then mill 1 from your personal deck. Refreshes at the start of your turn.',
+    onOffer:null, onDiscard:null, blessingFx:null},
+
+  M_POORO:{id:'M_POORO',name:'Poor Offers',type:'tithe',blessingCost:0,ofv:1,
+    desc:'Basic Tribute. No effects.',onOffer:null,onDiscard:null},
+
+  // ── THE ELDRITCH SET ──
+  M_ELD_SPINE:{id:'M_ELD_SPINE',name:'Spine of the Eldritch',type:'tithe',blessingCost:0,ofv:1,
+    desc:'Basic Tribute. No effects. Part of the Eldritch set.',onOffer:null,onDiscard:null},
+  M_ELD_BLOOD:{id:'M_ELD_BLOOD',name:'Blood of the Eldritch',type:'tithe',blessingCost:0,ofv:1,
+    desc:'Basic Tribute. No effects. Part of the Eldritch set.',onOffer:null,onDiscard:null},
+  M_ELD_HEART:{id:'M_ELD_HEART',name:'Heart of the Eldritch',type:'tithe',blessingCost:0,ofv:1,
+    desc:'Basic Tribute. No effects. Part of the Eldritch set.',onOffer:null,onDiscard:null},
+  M_ELD_FLESH:{id:'M_ELD_FLESH',name:'Flesh of the Eldritch',type:'tithe',blessingCost:0,ofv:1,
+    desc:'Basic Tribute. No effects. Part of the Eldritch set.',onOffer:null,onDiscard:null},
+
+  M_ELD_SOUL:{id:'M_ELD_SOUL',name:'Soul of the Eldritch',type:'tithe',blessingCost:0,ofv:1,
+    desc:'Basic Tribute. Can be offered normally. [Req] Hold Spine, Blood, Heart & Flesh of the Eldritch. [Effect] Place as Blessing to win the game.',
+    onOffer:null,
+    onDiscard:null,
+    // Req checked only when placing as Blessing
+    blessingReq:(gs,pi)=>{
+      const hand=gs.P[pi].hand;
+      const needed=['M_ELD_SPINE','M_ELD_BLOOD','M_ELD_HEART','M_ELD_FLESH'];
+      return needed.every(id=>hand.some(c=>c.id===id));
+    },
+    onBlessing:(gs,i)=>{
+      gs.over=true;
+      L(N(i,gs)+' reveals the complete Eldritch — THE RITE IS FULFILLED!','good');
+      showWin(i,gs);
+    }},
+};
+
+const TMPL = {
+  // Spells (cost)
+  S_TITHE:3,S_GRAVE:4,S_HOLLOW:2,S_DCOL:10,S_MRUIN:2,S_STEAL:2,
+  S_MUTUAL:2,S_TAKEB:3,S_1FOR1:8,S_SAC:1,S_DENY:3,S_SMITE:3,S_STROBBERY:3,S_BSTROBERRY:3,
+  // Spells (free)
+  S_DRAW1:4,S_DRAW2:3,S_DSPY:2,S_TEARS:3,S_WARD:3,S_PULSE:3,S_HOUSE:3,S_VASE:4,S_RJUG:2,S_SCROUNGE:8,S_HTRAP:12,S_COPYC:2,S_FPOINT:8,
+  // Traps
+  T_LSCREAM:2,T_NEGATE:12,T_GNEGATE:5,T_GRTSTNEGATE:3,T_CNEGATE:3,T_NOU:3,T_THOLE:3,T_ODENIAL:3,T_UNFORT:3,
+  // Tithes (effect)
+  M_GRAVE:3,M_HECA:3,M_SENT:3,M_TMASTER:2,M_VAULT:2,M_SIPH:2,M_DCOLLECT:3,M_THFCAT:3,
+  M_OALMS:3,M_OFEAST:2,
+  // The Lament archetype
+  M_EIREN:3,M_MERLY:5,M_HAVNYS:3,M_HEART_LAMENT:2,
+  // Basics
+  M_POORO:20,
+  // Eldritch set — 1 copy each (rare combo win)
+  M_ELD_SPINE:1,M_ELD_BLOOD:1,M_ELD_HEART:1,M_ELD_FLESH:1,M_ELD_SOUL:1,
+};
+
+let UID=0;
+const BASE_TOTAL_PLAYERS = 4;
+const MIN_TOTAL_PLAYERS = 2;
+const MAX_TOTAL_PLAYERS = 9;
+const DEFAULT_TOTAL_PLAYERS = 4;
+const GAME_OPTIONS = { totalPlayers: DEFAULT_TOTAL_PLAYERS };
+const TUTORIAL_SEEN_KEY = 'rite_of_offerings_rules_tutorial_seen_v1';
+const OPPONENT_NAMES = ['Seraph','Morvaine','Duskrel','Nyxara','Veyr','Orrin','Sable','Thorn','Mire'];
+const clampTotalPlayers = n => Math.max(MIN_TOTAL_PLAYERS, Math.min(MAX_TOTAL_PLAYERS, parseInt(n,10)||DEFAULT_TOTAL_PLAYERS));
+const deckScaleForPlayers = totalPlayers => Math.max(1, totalPlayers / BASE_TOTAL_PLAYERS);
+const mkCard = id => ({...DEF[id], uid: id+'_'+(UID++)});
+const mkCardById = id => mkCard(id); // alias used in onDiscard closures
+const buildDeck = (totalPlayers=DEFAULT_TOTAL_PLAYERS) => {
+  const d=[];
+  const scale = deckScaleForPlayers(clampTotalPlayers(totalPlayers));
+  for(const [id,n] of Object.entries(TMPL)) {
+    const isEldritchWinCondition = id.startsWith('M_ELD_');
+    const count = isEldritchWinCondition ? n : Math.max(1, Math.round(n * scale));
+    for(let i=0;i<count;i++) d.push(mkCard(id));
+  }
+  return shuf(d);
+};
+const shuf = a => { for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];} return a; };
+
+// ─────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────
+let GS = null;
+// UI state — only tracks what the human sees/clicks
+const UI = {
+  sel: null,          // selected card index in human hand
+  awaitResp: false,   // true = human response window open
+  respDone: null,     // callback to close response window
+  respTrig: null,     // trigger type that opened the response window
+};
+
+// Resolution pacing. These timings make stack resolution and negation readable.
+const RESOLVE_STEP_MS = 1100;
+const CHAIN_PRE_RESOLVE_MS = 850;
+const NEGATE_FLASH_MS = 950;
+
+const mkP = (id, name, human) => ({
+  id, name, human,
+  hand: [], offerings: Array(15).fill(false), offeredCards: Array(15).fill(null),
+  traps: [null,null,null],
+  blessing: null,
+  pdeck: [],          // current personal deck pile
+  draftedCards: [],   // full drafted deck list, preserved for review even after drawing/milling
+  bonus: 0, denied: false, offersLeft: 1, vaultUsed: false, warded: false,
+  offsThisTurn: 0,
+  heartLamentUsed: false,   // Heart of the Lament mill once per own turn
+  debtCollectorUsed: false,
+  thievingCatUsed: false,
+});
+
+const buildPlayers = totalPlayers => {
+  const count = clampTotalPlayers(totalPlayers);
+  const players = [mkP(0,'You',true)];
+  for(let i=1;i<count;i++) players.push(mkP(i, OPPONENT_NAMES[i-1] || ('Opponent '+i), false));
+  return players;
+};
+
+const initGS = (totalPlayers=GAME_OPTIONS.totalPlayers) => {
+  const players = buildPlayers(totalPlayers);
+  return {
+    P: players,
+    deck: buildDeck(players.length), disc: [], rz: [],
+    cur: 0, turn: 1, over: false,
+    totalPlayers: players.length,
+  };
+};
+
+const N  = (i,gs) => gs.P[i].name;
+const OC = p => p.offerings.filter(Boolean).length;
+const HL = p => p.blessing?.id==='M_HECA' ? Infinity : 9;
+const NS = p => { for(let i=14;i>=0;i--) if(!p.offerings[i]) return i; return -1; };
+const typeLabel = cardOrType => {
+  const t = typeof cardOrType === 'string' ? cardOrType : cardOrType?.type;
+  return t === 'tithe' ? 'Tribute' : (t || '');
+};
+const cardTargetsOfferingEffect = card => ['S_DCOL','S_STEAL','S_MRUIN','S_MUTUAL'].includes(card?.id);
+const actionTriggerForCard = card => cardTargetsOfferingEffect(card) ? 'toff' : 'any';
+const stripTags = html => String(html||'').replace(/<[^>]*>/g,'');
+
+function markRZNegated(gs, entry, slotIndex, by=null) {
+  if(!gs || !entry || !entry.card) return false;
+  // Keep the card in the Resolution Zone and mark it instead of popping it.
+  // The resolver will later remove it and skip only this marked card.
+  entry.negated = true;
+  entry.negatedBy = by;
+  entry.negatedAt = Date.now();
+  entry.negatedSlot = Math.max(0, Math.min(6, slotIndex ?? gs.rz.indexOf(entry)));
+  renderAll(gs);
+  return true;
+}
+
+// ─────────────────────────────────────────
+// CORE MECHANICS
+// ─────────────────────────────────────────
+function drw(gs, pi, n, fromEffect=false) {
+  for(let i=0;i<n;i++) {
+    if(!gs.deck.length) {
+      if(!gs.disc.length) break;
+      gs.deck = shuf([...gs.disc]);
+      gs.disc = [];
+      L('Shared deck reshuffled','hi');
+    }
+    if(gs.deck.length) gs.P[pi].hand.push(gs.deck.pop());
+    // Hecahand: draw 1 extra from public deck for each card drawn via effect
+    if(fromEffect && gs.P[pi].blessing?.id==='M_HECA' && gs.deck.length>0) {
+      const c=gs.deck.pop(); gs.P[pi].hand.push(c);
+    }
+  }
+}
+
+function enfLim(gs, pi, cb) {
+  const lim = HL(gs.P[pi]);
+  if(lim === Infinity) { if(cb) cb(); return; } // Hecahand: no limit
+  const over = gs.P[pi].hand.length - lim;
+  if(over <= 0) { if(cb) cb(); return; }
+  if(gs.P[pi].human) {
+    // Human picks which cards to discard — no onDiscard effects
+    pickHandLimitDiscard(gs, over, cb);
+  } else {
+    // AI discards last N cards (no onDiscard for hand-limit)
+    for(let i=0;i<over;i++) gs.disc.push(gs.P[pi].hand.pop());
+    if(cb) cb();
+  }
+}
+
+function placeOff(gs, pi, n=1, sourceCard=null) {
+  const p=gs.P[pi]; let placed=0;
+  if(!p.offeredCards) p.offeredCards=Array(15).fill(null);
+  for(let c=0;c<n;c++) {
+    const s=NS(p); if(s===-1) break;
+    p.offerings[s]=true;
+    p.offeredCards[s]=sourceCard ? {...sourceCard} : null;
+    placed++;
+    p.offsThisTurn=(p.offsThisTurn||0)+1;
+    // siphon: blessing check
+    gs.P.forEach((op,oi)=>{
+      if(oi!==pi && op.blessing?.id==='M_SIPH') drw(gs,oi,1);
+    });
+  }
+  if(placed) L(N(pi,gs)+' fills '+placed+' offering slot'+(placed!==1?'s':'')+' ['+OC(p)+'/15]','good');
+  if(OC(p)>=15){gs.over=true;showWin(pi,gs);}
+  return placed;
+}
+
+function clrTraps(gs, pi) {
+  const p=gs.P[pi];
+  let removed=0;
+  for(let i=0;i<p.traps.length;i++) {
+    const trap=p.traps[i];
+    if(!trap) continue;
+    gs.disc.push(trap);
+    p.traps[i]=null;
+    removed++;
+  }
+  if(removed) L(N(pi,gs)+' loses '+removed+' trap card(s)','warn');
+  else L(N(pi,gs)+' has no traps to remove','');
+}
+
+function rmOff(gs, pi, n=1) {
+  const p=gs.P[pi];
+  if(p.warded){L(N(pi,gs)+' is warded — removal blocked','hi');return;}
+  if(p.blessing?.id==='M_SENT'){L(N(pi,gs)+"'s Stone Sentinel prevents offering removal",'hi');return;}
+  if(p.blessing?.id==='M_VAULT' && !p.vaultUsed){
+    p.vaultUsed=true;L(N(pi,gs)+"'s Vault blocks 1 removal",'hi');n--;
+    if(n<=0)return;
+  }
+  let rem=0;
+  for(let c=0;c<n;c++) for(let i=0;i<15;i++) if(p.offerings[i]){p.offerings[i]=false;if(p.offeredCards)p.offeredCards[i]=null;rem++;break;}
+  if(rem) L(N(pi,gs)+' loses '+rem+' offering'+(rem!==1?'s':'')+' ['+OC(p)+'/15]','warn');
+}
+
+function stlOff(gs, src, tgt) {
+  const tp=gs.P[tgt];
+  if(tp.blessing?.id==='M_SENT'){L(N(tgt,gs)+"'s Stone Sentinel prevents steal",'hi'); return;}
+  if(tp.blessing?.id==='M_VAULT' && !tp.vaultUsed){
+    tp.vaultUsed=true;L(N(tgt,gs)+"'s Vault blocks steal",'hi'); return;
+  }
+  if(tp.warded){L(N(tgt,gs)+' is warded — steal blocked','hi'); return;}
+  const filled=[];
+  for(let i=0;i<15;i++) if(tp.offerings[i]) filled.push(i);
+  if(!filled.length){L(N(tgt,gs)+' has no offerings to steal',''); return;}
+  if(gs.P[src].human && filled.length>1){
+    gs._stealOfferingPending={src,tgt,slots:filled};
+    L('Choose which offering to steal from '+N(tgt,gs),'hi');
+    return;
+  }
+  stealOfferingSlot(gs,src,tgt,filled[0]);
+}
+
+function stealOfferingSlot(gs, src, tgt, slot) {
+  const tp=gs.P[tgt];
+  if(!tp || !tp.offerings[slot]){L('That offering is no longer available','warn');return;}
+  const stolenCard=tp.offeredCards?.[slot]||null;
+  tp.offerings[slot]=false;
+  if(tp.offeredCards) tp.offeredCards[slot]=null;
+  placeOff(gs,src,1,stolenCard);
+  L(N(src,gs)+' steals offering slot '+(slot+1)+' from '+N(tgt,gs),'warn');
+}
+
+function blatantStrobbery(gs, src, tgt) {
+  const h=gs.P[tgt]?.hand;
+  if(!h||!h.length){L(N(tgt,gs)+' has no cards','');return;}
+  if(gs.P[src].human){
+    gs._blatantStrobberyPending={src,tgt};
+    L('Choose 1 card from '+N(tgt,gs)+"'s hand to steal",'hi');
+    return;
+  }
+  let best=0,bestScore=-1;
+  h.forEach((c,i)=>{
+    let score=c.type==='tithe'?70:c.type==='trap'?60:50;
+    if(c.id==='M_ELD_SOUL') score+=40;
+    if(DEF[c.id]?.blessingCost) score+=DEF[c.id].blessingCost*5;
+    if(score>bestScore){bestScore=score;best=i;}
+  });
+  const c=h.splice(best,1)[0];
+  gs.P[src].hand.push(c);
+  L(N(src,gs)+' blatantly steals '+c.name+' from '+N(tgt,gs),'warn');
+}
+
+function fDisc(gs, pi, n) {
+  if(gs.P[pi].blessing?.id==='M_VAULT' && !gs.P[pi].vaultUsed){
+    gs.P[pi].vaultUsed=true;
+    L(N(pi,gs)+"'s Vault blocks hand removal",'hi');
+    return;
+  }
+  for(let i=0;i<n;i++) {
+    if(!gs.P[pi].hand.length) break;
+    const c=gs.P[pi].hand.pop();
+    gs.disc.push(c);
+    // Fire onDiscard (e.g. Martyr-style cards)
+    if(DEF[c.id]?.onDiscard) DEF[c.id].onDiscard(gs,pi);
+  }
+  L(N(pi,gs)+' discards '+n+' card'+(n!==1?'s':'') ,'warn');
+}
+
+function giveHandCardAtIndex(gs, from, to, idx, sourceName) {
+  if(from===to) return false;
+  const giver=gs.P[from], receiver=gs.P[to];
+  if(!giver?.hand?.length || !receiver) return false;
+  if(idx<0 || idx>=giver.hand.length) return false;
+  const c=giver.hand.splice(idx,1)[0];
+  receiver.hand.push(c);
+  L(N(from,gs)+' gives '+c.name+' to '+N(to,gs)+' via '+sourceName,'warn');
+  return true;
+}
+
+function giveRandomHandCard(gs, from, to, sourceName) {
+  const giver=gs.P[from];
+  if(!giver?.hand?.length) return false;
+  const idx=0|Math.random()*giver.hand.length;
+  return giveHandCardAtIndex(gs, from, to, idx, sourceName);
+}
+
+function chooseHumanGiveCard(gs, from, to, sourceName, cb) {
+  const giver=gs.P[from], receiver=gs.P[to];
+  if(!giver?.human || !giver.hand.length || !receiver) { if(cb) cb(false); return false; }
+  const cards='<div class="choice-card-grid">'+giver.hand.map((c,i)=>
+    readableCardHTML(c,{label:'Give this card · Hand #'+(i+1),onclick:'confirmGiveCardChoice('+i+')'})
+  ).join('')+'</div>';
+  GS._giveCardChoice={from,to,sourceName,cb};
+  openModal(sourceName,
+    '<div style="margin-bottom:10px;color:var(--ow);">Choose 1 card to give to <b>'+escHTML(receiver.name)+'</b>:</div>'+cards,
+    '',
+    ()=>{ L('Choose a card to give to continue','warn'); chooseHumanGiveCard(GS, from, to, sourceName, cb); }
+  );
+  return true;
+}
+
+function confirmGiveCardChoice(idx) {
+  const s=GS._giveCardChoice;
+  if(!s) return;
+  GS._giveCardChoice=null;
+  closeModal();
+  const moved=giveHandCardAtIndex(GS, s.from, s.to, idx, s.sourceName);
+  renderAll(GS);
+  if(s.cb) s.cb(!!moved);
+}
+
+function useDebtCollector(gs, pi, cb=null) {
+  const p=gs.P[pi];
+  if(p.blessing?.id!=='M_DCOLLECT' || p.debtCollectorUsed) { if(cb) cb(false); return false; }
+  const givers=[];
+  gs.P.forEach((op,oi)=>{ if(oi!==pi && op.hand.length) givers.push(oi); });
+  if(!givers.length){ L('No cards available for Debt Collector','warn'); if(cb) cb(false); return false; }
+
+  let moved=0;
+  const humanGiver=givers.find(oi=>gs.P[oi].human);
+  givers.forEach(oi=>{ if(oi!==humanGiver && giveRandomHandCard(gs,oi,pi,'Debt Collector')) moved++; });
+
+  const finish = humanMoved => {
+    if(humanMoved) moved++;
+    if(moved){ p.debtCollectorUsed=true; L(N(pi,gs)+' collects '+moved+' card'+(moved!==1?'s':''),'good'); }
+    else L('No cards available for Debt Collector','warn');
+    if(cb) cb(moved>0);
+    return moved>0;
+  };
+
+  if(humanGiver!=null){
+    chooseHumanGiveCard(gs,humanGiver,pi,'Debt Collector',movedFromHuman=>{ finish(movedFromHuman); renderAll(gs); });
+    return true;
+  }
+  return finish(false);
+}
+
+function useThievingCat(gs, pi, tgt, cb=null) {
+  const p=gs.P[pi];
+  if(p.blessing?.id!=='M_THFCAT' || p.thievingCatUsed) { if(cb) cb(false); return false; }
+  if(tgt==null || tgt===pi || !gs.P[tgt]?.hand?.length) { L('No valid Thieving Cat target','warn'); if(cb) cb(false); return false; }
+  const finish = moved => {
+    if(moved) p.thievingCatUsed=true;
+    if(cb) cb(!!moved);
+    return !!moved;
+  };
+  if(gs.P[tgt].human && !gs.P[pi].human){
+    chooseHumanGiveCard(gs,tgt,pi,'Thieving Cat',moved=>{ finish(moved); renderAll(gs); });
+    return true;
+  }
+  return finish(giveRandomHandCard(gs,tgt,pi,'Thieving Cat'));
+}
+
+function aiUseBlessingAbility(gs, pi, cb=null) {
+  const p=gs.P[pi];
+  const done = typeof cb==='function' ? cb : null;
+  if(p.blessing?.id==='M_HEART_LAMENT' && !p.heartLamentUsed && gs.disc.length>=3 && p.pdeck?.length){
+    for(let i=0;i<3;i++){
+      const idx=0|Math.random()*gs.disc.length;
+      const c=gs.disc.splice(idx,1)[0];
+      p.pdeck.push(c);
+    }
+    shufflePdeck(gs,pi);
+    p.heartLamentUsed=true;
+    L(N(pi,gs)+' uses Heart of the Lament — recycles 3, mills 1','good');
+    millCards(gs,pi,1,'personal');
+    if(done) done(true);
+    return true;
+  }
+  if(p.blessing?.id==='M_DCOLLECT' && !p.debtCollectorUsed) return useDebtCollector(gs,pi,done);
+  if(p.blessing?.id==='M_THFCAT' && !p.thievingCatUsed) {
+    let tgt=null,best=-1;
+    gs.P.forEach((op,oi)=>{ if(oi!==pi && op.hand.length>best){best=op.hand.length;tgt=oi;} });
+    if(tgt!=null && best>0) return useThievingCat(gs,pi,tgt,done);
+  }
+  if(done) done(false);
+  return false;
+}
+
+function negTop(gs, src) {
+  if(!gs.rz.length) { L('Nothing to negate',''); return; }
+  const slotIndex = gs.rz.length-1;
+  const e = gs.rz[slotIndex];
+  markRZNegated(gs, e, slotIndex, src);
+  L(logName(gs,src)+' negates '+e.card.name+'; it will not resolve','warn');
+}
+
+function mirTop(gs, src) {
+  if(!gs.rz.length) { L('Nothing to mirror',''); return; }
+  const e = gs.rz[gs.rz.length-1];
+  if(e.card.type!=='spell') { L('Cannot mirror non-spell',''); return; }
+  const def = DEF[e.card.id];
+  if(def?.fx) { const t=bestTgt(gs,src); def.fx(gs,src,t); L(N(src,gs)+' mirrors '+e.card.name,'good'); }
+}
+
+function chainEntryTargetsPlayer(gs, entry, pi) {
+  if(!gs || !entry || !entry.card || entry.negated) return false;
+  if(entry.src===pi) return false;
+  const def=DEF[entry.card.id]||{};
+  if(!['opp','player'].includes(def.target)) return false;
+  return entry.tgt===pi;
+}
+
+function topTargetedEntry(gs, pi) {
+  const top=gs?.rz?.length ? gs.rz[gs.rz.length-1] : null;
+  return chainEntryTargetsPlayer(gs, top, pi) ? top : null;
+}
+
+function canFingerPoint(gs, pi, newTarget=null) {
+  const entry=topTargetedEntry(gs, pi);
+  if(!entry) return false;
+  if(newTarget==null) return gs.P.some((_,oi)=>oi!==pi);
+  return gs.P[newTarget] && newTarget!==pi;
+}
+
+function fingerPointEffect(gs, src, newTarget) {
+  const entry=topTargetedEntry(gs, src);
+  if(!entry) { L('No targeted effect to redirect','warn'); return; }
+  if(newTarget==null || !gs.P[newTarget] || newTarget===src) { L('No valid Finger Point target','warn'); return; }
+  const oldTarget=entry.tgt;
+  entry.tgt=newTarget;
+  L(N(src,gs)+' changes '+entry.card.name+' target from '+N(oldTarget,gs)+' to '+N(newTarget,gs),'warn');
+  renderAll(gs);
+}
+
+function applyReflectedEffect(gs, reflector, target, entry) {
+  if(!entry || !entry.card || target==null || !gs.P[target]) return;
+  const card=entry.card;
+  const def=DEF[card.id];
+
+  // Finger Point modifies the card below it on the chain, so reflecting it must do the same.
+  if(card.id==='S_FPOINT') {
+    const idx=gs.rz.indexOf(entry);
+    const below=idx>0 ? gs.rz[idx-1] : null;
+    if(below && !below.negated) {
+      const oldTarget=below.tgt;
+      below.tgt=target;
+      L(N(reflector,gs)+' reflects Finger Point: '+below.card.name+' now targets '+N(target,gs),'warn');
+      renderAll(gs);
+    }
+    return;
+  }
+
+  // All-opponent offering effects are not targeted, but this fallback keeps reflected
+  // legacy chain states safe by applying only the relevant part to the original actor.
+  if(card.id==='S_MRUIN' || card.id==='S_MUTUAL') { rmOff(gs,target,1); return; }
+
+  if(def?.fx) def.fx(gs, reflector, target);
+}
+
+function reflectTargetedEffect(gs, src, fallbackTarget=null) {
+  const entry=topTargetedEntry(gs, src);
+  if(!entry) { L('No targeted effect to reflect','warn'); return; }
+  const opponent=entry.src ?? fallbackTarget;
+  if(opponent==null || !gs.P[opponent]) { L('No opponent to reflect onto','warn'); return; }
+  const slotIndex=gs.rz.indexOf(entry);
+  markRZNegated(gs, entry, slotIndex, src);
+  L(N(src,gs)+' turns '+entry.card.name+' back on '+N(opponent,gs),'warn');
+  applyReflectedEffect(gs, src, opponent, entry);
+}
+
+// Rebirth deferred — queued after stack resolves to avoid mid-resolution modal
+function doRebirth(gs, src) {
+  if(!gs.disc.length) { L('Discard is empty',''); return; }
+  if(gs.P[src].human) {
+    // Schedule modal to open after current resolve chain
+    gs._rebirthPending = src;
+  } else {
+    // AI: pick best card
+    const best = gs.disc.find(c=>c.type==='spell'||c.passive==='offe') || gs.disc[gs.disc.length-1];
+    gs.disc.splice(gs.disc.indexOf(best),1);
+    gs.P[src].hand.push(best);
+    L(N(src,gs)+' retrieves '+best.name,'hi');
+  }
+}
+
+// ─────────────────────────────────────────
+// COST
+// ─────────────────────────────────────────
+function canPay(gs, pi, card, tgt=null) {
+  const p=gs.P[pi]; const def=DEF[card.id]; const c=def?.cost||{};
+  // Check [Req]
+  if(def?.req) {
+    if(def.target==='opp' && tgt==null) {
+      const hasTarget=gs.P.some((op,oi)=>oi!==pi && def.req(gs,pi,oi));
+      if(!hasTarget) return false;
+    } else if(def.target==='player' && tgt==null) {
+      const hasTarget=gs.P.some((_,oi)=>def.req(gs,pi,oi));
+      if(!hasTarget) return false;
+    } else if(!def.req(gs,pi,tgt)) return false;
+  }
+  // Check [Cost]
+  if(c.discard   && p.hand.length < c.discard+1) return false;
+  if(c.offer     && OC(p) < c.offer+1) return false;
+  if(c.rmblessing  && !p.blessing) return false;
+  // Tithe played as Blessing
+  if(card.type==='tithe' && card._asBlessing) {
+    const rc=def.blessingCost||0;
+    if(OC(p) < rc) return false; // need rc offerings to remove
+  }
+  return true;
+}
+
+// Pay everything EXCEPT the discard portion
+function payCostBase(gs, pi, card) {
+  const p=gs.P[pi]; const def=DEF[card.id]; const c=def?.cost||{};
+  // Remove the card being played from hand
+  const ci = p.hand.findIndex(x=>x.uid===card.uid);
+  if(ci!==-1) p.hand.splice(ci,1);
+  if(c.offer) rmOff(gs,pi,c.offer);
+  if(c.rmblessing && p.blessing) {
+    const r=p.blessing; p.blessing=null;
+    if(DEF[r.id]?.onDiscard) DEF[r.id].onDiscard(gs,pi);
+    gs.disc.push(r);
+  }
+  // Tithe as Blessing: pay blessingCost offerings
+  if(card.type==='tithe' && card._asBlessing) {
+    const rc=def.blessingCost||0;
+    if(rc>0) rmOff(gs,pi,rc);
+  }
+}
+
+function snapshotHumanPlay(gs) {
+  return {
+    players:gs.P.map(p=>({
+      hand:[...p.hand], offerings:[...p.offerings], offeredCards:p.offeredCards?[...p.offeredCards]:Array(15).fill(null),
+      traps:[...p.traps], blessing:p.blessing, pdeck:[...p.pdeck], draftedCards:[...p.draftedCards],
+      bonus:p.bonus, denied:p.denied, offersLeft:p.offersLeft, vaultUsed:p.vaultUsed, warded:p.warded,
+      offsThisTurn:p.offsThisTurn, heartLamentUsed:p.heartLamentUsed, debtCollectorUsed:p.debtCollectorUsed, thievingCatUsed:p.thievingCatUsed
+    })),
+    deck:[...gs.deck], disc:[...gs.disc], rz:[...gs.rz],
+    cur:gs.cur, turn:gs.turn, over:gs.over, phase:gs.phase,
+    drawPhase:gs._drawPhase, drawsLeft:gs._drawsLeft,
+    ui:{sel:UI.sel, awaitResp:UI.awaitResp, respTrig:UI.respTrig, respDone:UI.respDone}
+  };
+}
+
+function restoreHumanPlay(gs, snap) {
+  if(!snap) return;
+  snap.players.forEach((sp,idx)=>{
+    const p=gs.P[idx];
+    p.hand=[...sp.hand];
+    p.hand.forEach(c=>{ if(c&&c._asBlessing) delete c._asBlessing; });
+    p.offerings=[...sp.offerings];
+    p.offeredCards=[...sp.offeredCards];
+    p.traps=[...sp.traps];
+    p.blessing=sp.blessing;
+    if(p.blessing&&p.blessing._asBlessing) delete p.blessing._asBlessing;
+    p.pdeck=[...sp.pdeck];
+    p.draftedCards=[...sp.draftedCards];
+    p.bonus=sp.bonus; p.denied=sp.denied; p.offersLeft=sp.offersLeft; p.vaultUsed=sp.vaultUsed; p.warded=sp.warded;
+    p.offsThisTurn=sp.offsThisTurn; p.heartLamentUsed=sp.heartLamentUsed; p.debtCollectorUsed=sp.debtCollectorUsed; p.thievingCatUsed=sp.thievingCatUsed;
+  });
+  gs.deck=[...snap.deck]; gs.disc=[...snap.disc]; gs.rz=[...snap.rz];
+  gs.cur=snap.cur; gs.turn=snap.turn; gs.over=snap.over; gs.phase=snap.phase;
+  gs._drawPhase=snap.drawPhase; gs._drawsLeft=snap.drawsLeft;
+  if(snap.ui){
+    UI.sel=snap.ui.sel; UI.awaitResp=snap.ui.awaitResp; UI.respTrig=snap.ui.respTrig; UI.respDone=snap.ui.respDone;
+  }
+  gs._glimpsePending=null; gs._glimpseTop=null; gs._glimpseCb=null;
+  gs._rebirthPending=null; gs._rebirthCb=null;
+  gs._stealOfferingPending=null; gs._stealOfferingCb=null;
+  gs._blatantStrobberyPending=null; gs._blatantStrobberyCb=null; gs._giveCardChoice=null;
+}
+
+function cancelHumanPlay(gs, snap, selectedUid=null) {
+  restoreHumanPlay(gs, snap);
+  UI.sel = selectedUid ? gs.P[0].hand.findIndex(c=>c.uid===selectedUid) : null;
+  if(UI.sel<0) UI.sel=null;
+  clearPendingPlayUndo(gs);
+  closeModal();
+  L('Play cancelled — action undone','');
+  if(UI.awaitResp) showRespPopup(gs); else hideRespPopup();
+  renderAll(gs);
+}
+
+function beginPendingPlayUndo(gs, snap, selectedUid=null) {
+  gs._pendingPlayUndo={snap, selectedUid};
+}
+
+function clearPendingPlayUndo(gs) {
+  if(gs) gs._pendingPlayUndo=null;
+}
+
+function cancelPendingPlayUndo(gs) {
+  const pending=gs?gs._pendingPlayUndo:null;
+  if(!pending) return false;
+  cancelHumanPlay(gs, pending.snap, pending.selectedUid);
+  return true;
+}
+
+// Full cost including discard (used by AI)
+function payCost(gs, pi, card) {
+  const p=gs.P[pi]; const c=DEF[card.id]?.cost||{};
+  payCostBase(gs, pi, card);
+  if(c.discard) for(let i=0;i<c.discard;i++) if(p.hand.length) gs.disc.push(p.hand.pop());
+}
+
+// For human: pay base cost then show discard picker if needed, then call cb()
+function payCostHuman(gs, card, cb, cancelCb=null) {
+  const c=DEF[card.id]?.cost||{};
+  const snap=snapshotHumanPlay(gs);
+  const selectedUid=card?.uid||null;
+  payCostBase(gs, 0, card);
+  if(!c.discard) { cb(); return; }
+  // Show picker — hand at this point no longer contains the played card
+  pickDiscards(gs, c.discard, cb, ()=>{
+    if(cancelCb) cancelCb(snap, selectedUid);
+    else cancelHumanPlay(gs, snap, selectedUid);
+  });
+}
+
+// Hand-limit discard picker — player chooses what to throw away at end of turn
+// Cards discarded this way do NOT trigger onDiscard effects
+function pickHandLimitDiscard(gs, needed, cb) {
+  const p=gs.P[0];
+  let chosen=[];
+
+  function render() {
+    const cardBtns = p.hand.map((c,i)=>{
+      const sel=chosen.includes(i);
+      return readableCardHTML(c,{label:(sel?'SELECTED · ':'')+'Hand #'+(i+1),onclick:'toggleHandDiscard('+i+')'});
+    }).join('');
+
+    const remaining = needed - chosen.length;
+    const body = `<div style="color:var(--yr);font-size:clamp(.5rem,2.2vw,.7rem);margin-bottom:2vw;">
+      HAND LIMIT: DISCARD ${needed} CARD${needed>1?'S':''} — ${remaining} MORE
+    </div><div class="choice-card-grid">${cardBtns}</div>`;
+
+    const confirmBtn = chosen.length===needed
+      ? `<button class="btn bb" onclick="confirmHandDiscard()">Discard Selected</button>`
+      : `<button class="btn bgr" disabled style="opacity:.3">Discard Selected</button>`;
+
+    openModal('END OF TURN — HAND LIMIT', body, confirmBtn, ()=>{
+      // Can't cancel hand limit — force discard from end
+      const over = p.hand.length - HL(p);
+      for(let i=0;i<over;i++) gs.disc.push(p.hand.pop());
+      closeModal(); GS._handLimitPick=null;
+      if(cb) cb();
+    });
+    GS._handLimitPick = { chosen, needed, cb, render };
+  }
+  render();
+}
+
+function toggleHandDiscard(idx) {
+  const s=GS._handLimitPick; if(!s) return;
+  const pos=s.chosen.indexOf(idx);
+  if(pos!==-1) s.chosen.splice(pos,1);
+  else if(s.chosen.length<s.needed) s.chosen.push(idx);
+  s.render();
+}
+
+function confirmHandDiscard() {
+  const s=GS._handLimitPick; if(!s) return;
+  if(s.chosen.length!==s.needed) return;
+  closeModal();
+  const p=GS.P[0];
+  const sorted=[...s.chosen].sort((a,b)=>b-a);
+  for(const i of sorted){
+    const c=p.hand.splice(i,1)[0];
+    GS.disc.push(c);
+    // Hand-limit discards do NOT fire onDiscard
+    L('You discard '+c.name+' (hand limit)','');
+  }
+  GS._handLimitPick=null;
+  renderAll(GS);
+  const cb=s.cb; if(cb) cb();
+}
+
+// Show a modal letting the human pick which cards to discard
+function pickDiscards(gs, needed, cb, cancelCb=null) {
+  const p=gs.P[0];
+  let chosen=[];
+
+  function renderPicker() {
+    if(p.hand.length===0){ finishPick(); return; }
+    const cardBtns = p.hand.map((c,i)=>{
+      const sel=chosen.includes(i);
+      return readableCardHTML(c,{label:(sel?'SELECTED · ':'')+'Hand #'+(i+1),onclick:'toggleDiscard('+i+')'});
+    }).join('');
+
+    const remaining = needed - chosen.length;
+    const body = `<div style="color:var(--yr);font-size:clamp(.5rem,2.2vw,.7rem);margin-bottom:2vw;letter-spacing:.5px;">
+      DISCARD ${needed} CARD${needed>1?'S':''} — ${remaining} MORE TO GO
+    </div><div class="choice-card-grid">${cardBtns}</div>`;
+
+    const confirmBtn = chosen.length===needed
+      ? `<button class="btn bb" onclick="confirmDiscards()">Confirm Discard</button>`
+      : `<button class="btn bgr" disabled style="opacity:.3">Confirm Discard</button>`;
+
+    openModal('PAY COST — CHOOSE DISCARD', body, confirmBtn, ()=>{
+      GS._discardPick=null;
+      if(cancelCb) cancelCb();
+      else { closeModal(); L('Play cancelled',''); renderAll(GS); }
+    });
+  }
+
+  // Store state globally so onclick handlers can reach it
+  GS._discardPick = { chosen, needed, cb, render: renderPicker };
+  renderPicker();
+}
+
+function toggleDiscard(idx) {
+  const s = GS._discardPick; if(!s) return;
+  const pos = s.chosen.indexOf(idx);
+  if(pos!==-1) {
+    s.chosen.splice(pos,1);
+  } else if(s.chosen.length < s.needed) {
+    s.chosen.push(idx);
+  }
+  s.render();
+}
+
+function confirmDiscards() {
+  const s=GS._discardPick; if(!s) return;
+  if(s.chosen.length!==s.needed) return;
+  closeModal();
+  const p=GS.P[0];
+  const sorted=[...s.chosen].sort((a,b)=>b-a);
+  for(const i of sorted){
+    const c=p.hand.splice(i,1)[0];
+    GS.disc.push(c);
+    // Cost discards DO fire onDiscard (e.g. Martyr)
+    if(DEF[c.id]?.onDiscard) DEF[c.id].onDiscard(GS,0);
+    L('You discard '+c.name,'');
+  }
+  GS._discardPick=null;
+  renderAll(GS);
+  s.cb();
+}
+
+// ─────────────────────────────────────────
+// MILL MECHANICS
+// ─────────────────────────────────────────
+
+// Mill n cards from a player's deck (personal or public)
+// Triggers onMill effects if any milled card has them
+function millCards(gs, pi, n, src) {
+  const deck = src==='personal' ? gs.P[pi].pdeck : gs.deck;
+  if(!deck || !deck.length) { L(N(pi,gs)+" has no cards to mill from "+(src||'public')+" deck",''); return; }
+  const toMill = Math.min(n, deck.length);
+  for(let i=0; i<toMill; i++) {
+    const card = deck.pop(); // top of deck
+    gs.disc.push(card);
+    L(N(pi,gs)+' mills '+card.name,'');
+    // Fire onMill if defined — pass src so Eiren can check personal-only
+    if(DEF[card.id]?.onMill) DEF[card.id].onMill(gs, pi, src||'public', card);
+  }
+}
+
+// Set a card as an offering immediately (bypasses offersLeft, no cost)
+// Used by mill-triggered effects
+function setAsOffering(gs, pi, sourceCard=null) {
+  const p=gs.P[pi];
+  const slot = NS(p);
+  if(slot === -1) { L(N(pi,gs)+' has no offering slots left','warn'); return; }
+  if(!p.offeredCards) p.offeredCards=Array(15).fill(null);
+  p.offerings[slot] = true;
+  p.offeredCards[slot] = sourceCard ? {...sourceCard} : null;
+  p.offsThisTurn = (p.offsThisTurn||0)+1;
+  // Siphon check
+  gs.P.forEach((op,oi)=>{ if(oi!==pi && op.blessing?.id==='M_SIPH') drw(gs,oi,1); });
+  L(N(pi,gs)+' sets a milled card as an offering ['+OC(p)+'/15]','good');
+  if(OC(p)>=15){gs.over=true;showWin(pi,gs);}
+}
+
+// Shuffle personal deck
+function shufflePdeck(gs, pi) {
+  gs.P[pi].pdeck = shuf(gs.P[pi].pdeck);
+}
+
+// Draw from personal deck (for Tears of the Lament return)
+function returnToPersonal(gs, pi, card) {
+  gs.P[pi].pdeck.push(card);
+}
+
+function drawPersonal(gs, pi, n=1) {
+  let drew=0;
+  for(let i=0;i<n;i++){
+    const deck=gs.P[pi].pdeck;
+    if(!deck || !deck.length) break;
+    const c=deck.pop();
+    gs.P[pi].hand.push(c);
+    drew++;
+  }
+  if(drew){
+    L(N(pi,gs)+' draws '+drew+' personal card'+(drew!==1?'s':'') ,'hi');
+    hecahandCheck(gs, pi);
+  } else {
+    L(N(pi,gs)+' has no personal deck cards to draw','warn');
+  }
+}
+
+// Hecahand: when active, after every card-effect draw, draw 1 extra from public
+// Called inside drw when Hecahand blessing is active
+function hecahandCheck(gs, pi) {
+  if(gs.P[pi].blessing?.id==='M_HECA' && gs.deck.length>0) {
+    const c=gs.deck.pop(); gs.P[pi].hand.push(c);
+    L(N(pi,gs)+"'s Hecatoncherie — draws 1 extra",'hi');
+  }
+}
+
+// Activate Havnys from hand (human)
+function hActivateHavnys() {
+  const gs=GS, p=gs.P[0];
+  if(gs.cur!==0) return;
+  const idx=UI.sel;
+  if(idx===null||!p.hand[idx]||p.hand[idx].id!=='M_HAVNYS'){
+    L('Select Havnys to activate','warn'); return;
+  }
+  const card=p.hand.splice(idx,1)[0];
+  UI.sel=null;
+  gs.disc.push(card);
+  L('You discard Havnys, the Lament','');
+  DEF['M_HAVNYS'].activateFx(gs,0,card);
+  renderAll(gs);
+}
+
+// Heart of the Lament mill ability (human)
+function hHeartMill() {
+  const gs=GS, p=gs.P[0];
+  if(gs.cur!==0){L('Can only use during your turn','warn');return;}
+  if(!p.blessing||p.blessing.id!=='M_HEART_LAMENT'){L('Heart of the Lament not in Blessing Zone','warn');return;}
+  if(p.heartLamentUsed){L('Heart of the Lament already used this turn','warn');return;}
+  if(gs.disc.length<3){L('Need at least 3 cards in discard for Heart of the Lament','warn');return;}
+  showHeartLamentModal(gs, 0);
+}
+
+function hDebtCollector() {
+  const gs=GS, p=gs.P[0];
+  if(gs.cur!==0||UI.awaitResp) return;
+  if(p.blessing?.id!=='M_DCOLLECT'){L('Debt Collector not in Blessing Zone','warn');return;}
+  if(p.debtCollectorUsed){L('Debt Collector already used this turn','warn');return;}
+  useDebtCollector(gs,0);
+  renderAll(gs);
+}
+
+function hThievingCat() {
+  const gs=GS, p=gs.P[0];
+  if(gs.cur!==0||UI.awaitResp) return;
+  if(p.blessing?.id!=='M_THFCAT'){L('Thieving Cat not in Blessing Zone','warn');return;}
+  if(p.thievingCatUsed){L('Thieving Cat already used this turn','warn');return;}
+  const targets=gs.P.filter(pp=>!pp.human && pp.hand.length>0);
+  if(!targets.length){L('No opponent has cards for Thieving Cat','warn');return;}
+  const opts=targets.map(pp=>`<button class="btn bb" onclick="confirmThievingCat(${pp.id})">${pp.name} (${pp.hand.length} card${pp.hand.length!==1?'s':''})</button>`).join('');
+  openModal('Thieving Cat','Choose a player to give you a card:',opts,()=>{closeModal();renderAll(GS);});
+}
+
+function confirmThievingCat(tgt) {
+  closeModal();
+  useThievingCat(GS,0,tgt);
+  renderAll(GS);
+}
+
+function toggleLog() {
+  const p=document.getElementById('log-panel');
+  if(p) p.classList.add('open');
+}
+
+function openDiscardViewer() {
+  const gs=GS; if(!gs) return;
+  const viewer=document.getElementById('discard-viewer');
+  const container=document.getElementById('discard-cards');
+  if(!viewer||!container) return;
+  container.innerHTML='';
+  if(!gs.disc.length){
+    container.innerHTML='<div style="color:var(--dim);font-size:.7rem;padding:20px;">Discard pile is empty.</div>';
+  } else {
+    // Show most recent first
+    [...gs.disc].reverse().forEach(card=>{
+      const wrap=document.createElement('div');
+      wrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:6px;';
+      const el=mkCEl(card,false,false,false);
+      el.style.position='static';
+      el.style.transform='none';
+      el.style.width='130px';
+      el.style.height='182px';
+      el.style.fontSize='.58rem';
+      wrap.appendChild(el);
+      container.appendChild(wrap);
+    });
+  }
+  viewer.classList.add('show');
+}
+
+function closeDiscardViewer() {
+  const v=document.getElementById('discard-viewer');
+  if(v) v.classList.remove('show');
+}
+
+function openStealOfferingModal(gs, cb) {
+  const pending=gs._stealOfferingPending;
+  if(!pending){ if(cb) cb(); return; }
+  const {src,tgt}=pending;
+  const slots=[];
+  for(let i=0;i<15;i++) if(gs.P[tgt].offerings[i]) slots.push(i);
+  if(!slots.length){
+    gs._stealOfferingPending=null;
+    L(N(tgt,gs)+' has no offerings left to steal','warn');
+    if(cb) cb();
+    return;
+  }
+  const btns=slots.map(slot=>
+    `<button class="btn bb" style="margin:3px" onclick="confirmStealOffering(${slot})">Offering ${slot+1}</button>`
+  ).join('');
+  openModal('Underhanded Steal','Choose which offering to steal from <b>'+N(tgt,gs)+'</b>.',btns,
+    ()=>{ if(cancelPendingPlayUndo(gs)) return; closeModal(); gs._stealOfferingPending=null; if(cb) cb(); });
+  gs._stealOfferingCb=cb;
+}
+
+function confirmStealOffering(slot) {
+  const pending=GS._stealOfferingPending;
+  const cb=GS._stealOfferingCb;
+  GS._stealOfferingPending=null;
+  GS._stealOfferingCb=null;
+  closeModal();
+  if(pending) stealOfferingSlot(GS,pending.src,pending.tgt,slot);
+  renderAll(GS);
+  if(cb) cb();
+}
+
+function openBlatantStrobberyModal(gs, cb) {
+  const pending=gs._blatantStrobberyPending;
+  if(!pending){ if(cb) cb(); return; }
+  const {src,tgt}=pending;
+  const h=gs.P[tgt].hand;
+  if(!h.length){
+    gs._blatantStrobberyPending=null;
+    L(N(tgt,gs)+' has no cards left to steal','warn');
+    if(cb) cb();
+    return;
+  }
+  const btns=h.map((c,i)=>{
+    const col=c.type==='spell'?'var(--sc)':c.type==='trap'?'var(--tc)':'var(--mc)';
+    return `<button onclick="confirmBlatantStrobbery(${i})" style="
+      background:var(--navy3);color:var(--ow);border:3px solid ${col};
+      box-shadow:3px 3px 0 rgba(0,0,0,.7);font-family:var(--fui);font-weight:900;
+      font-size:clamp(.58rem,1vw,.82rem);padding:7px 10px;cursor:pointer;
+      margin:3px;display:inline-block;text-align:left;
+    ">${typeLabel(c).toUpperCase()} · ${c.name}</button>`;
+  }).join('');
+  openModal('Blatant Strobbery','Choose 1 card from <b>'+N(tgt,gs)+"</b>'s hand to add to yours.",btns,
+    ()=>{ if(cancelPendingPlayUndo(gs)) return; closeModal(); gs._blatantStrobberyPending=null; if(cb) cb(); });
+  gs._blatantStrobberyCb=cb;
+}
+
+function confirmBlatantStrobbery(idx) {
+  const pending=GS._blatantStrobberyPending;
+  const cb=GS._blatantStrobberyCb;
+  GS._blatantStrobberyPending=null;
+  GS._blatantStrobberyCb=null;
+  closeModal();
+  if(pending){
+    const h=GS.P[pending.tgt].hand;
+    if(h[idx]){
+      const c=h.splice(idx,1)[0];
+      GS.P[pending.src].hand.push(c);
+      L(N(pending.src,GS)+' blatantly steals '+c.name+' from '+N(pending.tgt,GS),'warn');
+    }
+  }
+  renderAll(GS);
+  if(cb) cb();
+}
+
+function openDraftedDeckViewer() {
+  showDraftedDeckViewer(false);
+}
+
+function showDraftedDeckViewer(startGame=false) {
+  if(!GS) return;
+  const viewer=document.getElementById('deck-reviewer');
+  const container=document.getElementById('deck-review-cards');
+  const title=document.getElementById('deck-review-title');
+  const sub=document.getElementById('deck-review-sub');
+  const ok=document.getElementById('deck-review-ok');
+  if(!viewer||!container||!title||!sub||!ok) return;
+
+  const drafted = GS.P[0].draftedCards?.length ? GS.P[0].draftedCards : (DRAFT.decks?.[0] || []);
+  GS._deckReviewStartGame = !!startGame;
+  title.textContent = startGame ? 'Your Drafted Deck' : 'Your Drafted Cards';
+  sub.textContent = drafted.length
+    ? drafted.length+' drafted cards · shown as originally drafted, not the remaining personal deck pile'
+    : 'No drafted cards yet';
+  ok.textContent = startGame ? 'OK' : 'Close';
+
+  container.innerHTML='';
+  if(!drafted.length){
+    container.innerHTML='<div style="color:var(--dim);font-size:1rem;padding:24px;">No drafted cards are available to review yet.</div>';
+  } else {
+    drafted.forEach((card,idx)=>{
+      const wrap=document.createElement('div');
+      wrap.className='deck-review-card-wrap';
+      const el=mkCEl(card,false,false,false);
+      el.title='Click to enlarge';
+      el.addEventListener('click',()=>showCardPopupById(card));
+      wrap.appendChild(el);
+      const n=document.createElement('div');
+      n.className='deck-review-index';
+      n.textContent='#'+(idx+1);
+      wrap.appendChild(n);
+      container.appendChild(wrap);
+    });
+  }
+  viewer.classList.add('show');
+}
+
+function closeDeckViewer() {
+  const viewer=document.getElementById('deck-reviewer');
+  if(viewer) viewer.classList.remove('show');
+  if(GS) GS._deckReviewStartGame=false;
+}
+
+function confirmDeckReview() {
+  const start=!!(GS && GS._deckReviewStartGame);
+  const viewer=document.getElementById('deck-reviewer');
+  if(viewer) viewer.classList.remove('show');
+  if(!GS) return;
+  GS._deckReviewStartGame=false;
+  if(start) beginGameAfterDraft(GS);
+}
+
+function beginGameAfterDraft(gs) {
+  if(gs._gameStarted) return;
+  gs._gameStarted=true;
+  gs.P.forEach((_,pi)=>{ for(let i=0;i<5;i++) drw(gs,pi,1,false); });
+  L('Draft complete! Each player has their starting hand.','good');
+  L('The Rite of Offerings begins. First to 15 wins.','hi');
+  renderAll(gs);
+  doHumanDraw(gs);
+}
+
+// Draw phase choice — player picks public or personal
+function hDrawFrom(src) {
+  const gs=GS;
+  if(gs._drawPhase!==true) return;
+  const p=gs.P[0];
+  if(src==='personal') {
+    if(!p.pdeck||!p.pdeck.length){L('Personal deck is empty','warn');return;}
+    const c=p.pdeck.pop(); p.hand.push(c);
+    L('You draw '+c.name+' from personal deck','hi');
+  } else {
+    drw(gs,0,1,false);
+    L('You draw from public deck','hi');
+  }
+  gs._drawsLeft=(gs._drawsLeft||0)-1;
+  if(gs._drawsLeft<=0) {
+    gs._drawPhase=false;
+    document.getElementById('draw-choice').classList.remove('active');
+    gs.phase='main';
+    renderAll(gs);
+  } else {
+    renderAll(gs); // still need 1 more draw
+  }
+}
+
+function costTxt(cost, card) {
+  const p=[];
+  if(cost.discard)  p.push('Discard '+cost.discard);
+  if(cost.offer)    p.push('Remove '+cost.offer+' offering(s)');
+  if(cost.rmblessing) p.push('Remove Blessing Zone Tribute');
+  if(card?.type==='tithe') {
+    const rc=DEF[card.id]?.blessingCost||0;
+    p.push(rc>0?'Remove '+rc+' offering(s) to Blessing':'Free to Offer / Blessing');
+  }
+  return p.join(' · ') || 'Free';
+}
+
+function logName(gs, pi) {
+  return pi===0 ? 'You' : (gs?.P?.[pi]?.name || 'Unknown');
+}
+function logObjName(gs, pi) {
+  return pi===0 ? 'you' : (gs?.P?.[pi]?.name || 'Unknown');
+}
+function logPoss(gs, pi) {
+  return pi===0 ? 'your' : logName(gs,pi)+"'s";
+}
+function logSelfWord(pi) {
+  return pi===0 ? 'yourself' : 'themselves';
+}
+function logTargetText(gs, src, tgt, card=null) {
+  const targetType = (DEF[card?.id] || card || {}).target;
+  if(targetType==='all_opp') return ' on all opponents';
+  if(targetType==='all') return ' on everyone';
+  if(tgt==null || !gs?.P?.[tgt]) return '';
+  if(tgt===src) return ' on '+logSelfWord(src);
+  return ' on '+logObjName(gs,tgt);
+}
+function logActionVerb(card) {
+  return card?.type==='trap' ? 'activates' : 'plays';
+}
+function logEffectFallback(gs, card, src, tgt) {
+  const raw = stripTags((DEF[card?.id]?.desc || card?.desc || '')).replace(/\s+/g,' ').trim();
+  const m = raw.match(/\[Effect\]\s*([^[]+)/i);
+  let txt = (m ? m[1] : raw).trim().replace(/\.$/, '');
+  const actor = logName(gs,src), poss = logPoss(gs,src);
+  const target = (tgt!=null && gs?.P?.[tgt]) ? logObjName(gs,tgt) : 'the target';
+  const targetPoss = (tgt!=null && gs?.P?.[tgt]) ? logPoss(gs,tgt) : "the target's";
+  txt = txt
+    .replace(/\bYou may\b/g, actor+' may')
+    .replace(/\bYou\b/g, actor)
+    .replace(/\byour\b/g, poss)
+    .replace(/\bYour\b/g, poss.charAt(0).toUpperCase()+poss.slice(1))
+    .replace(/\bTarget opponent\b/g, target)
+    .replace(/\btarget opponent\b/g, target)
+    .replace(/\bTarget player\b/g, target)
+    .replace(/\btarget player\b/g, target)
+    .replace(/\bTarget\b/g, target)
+    .replace(/\btarget\b/g, target)
+    .replace(/\bthat player remove\b/g, target+' removes')
+    .replace(/\btheir\b/g, targetPoss);
+  return txt || 'effect applies';
+}
+const EFFECT_LOG = {
+  S_TITHE:(gs,s,t)=>logName(gs,s)+' may offer +2 slots this turn',
+  S_GRAVE:(gs,s,t)=>logName(gs,s)+' gains +1 normal offering this turn',
+  S_HOLLOW:(gs,s,t)=>logName(gs,s)+' may offer +3 slots this turn',
+  S_DCOL:(gs,s,t)=>logName(gs,t)+' removes 1 offering',
+  S_MRUIN:(gs,s,t)=>'each opponent removes 1 offering',
+  S_STEAL:(gs,s,t)=>logName(gs,s)+' steals 1 offering from '+logObjName(gs,t),
+  S_MUTUAL:(gs,s,t)=>'each other player removes 1 offering',
+  S_TAKEB:(gs,s,t)=>logName(gs,s)+' returns 1 discard to hand',
+  S_1FOR1:(gs,s,t)=>logName(gs,s)+' draws 1 card',
+  S_SAC:(gs,s,t)=>logName(gs,s)+' removes their Blessing and may offer +3 slots this turn',
+  S_DENY:(gs,s,t)=>logName(gs,t)+' cannot make a normal offering this turn',
+  S_SMITE:(gs,s,t)=>logName(gs,t)+' loses their Blessing',
+  S_STROBBERY:(gs,s,t)=>logName(gs,s)+' takes 1 random card from '+logObjName(gs,t),
+  S_BSTROBERRY:(gs,s,t)=>logName(gs,s)+' chooses 1 card from '+logObjName(gs,t)+' to steal',
+  S_FPOINT:(gs,s,t)=>logName(gs,s)+' changes the target to '+logObjName(gs,t),
+  S_DRAW1:(gs,s,t)=>logName(gs,s)+' draws 1 public card',
+  S_DRAW2:(gs,s,t)=>logName(gs,s)+' draws 2 public cards',
+  S_DSPY:(gs,s,t)=>logName(gs,s)+' checks the top 3 public cards and keeps 1',
+  S_TEARS:(gs,s,t)=>logName(gs,s)+' mills 5 public cards',
+  S_WARD:(gs,s,t)=>logPoss(gs,s)+' offerings cannot be targeted this turn',
+  S_PULSE:(gs,s,t)=>logName(gs,t)+' discards 1 card',
+  S_HOUSE:(gs,s,t)=>logName(gs,t)+' loses all set traps',
+  S_VASE:(gs,s,t)=>logName(gs,s)+' draws 1 personal card',
+  S_RJUG:(gs,s,t)=>logName(gs,s)+' draws 2 personal cards',
+  S_SCROUNGE:(gs,s,t)=>logName(gs,s)+' returns 1 discard to hand',
+  S_HTRAP:(gs,s,t)=>logName(gs,s)+' negates the last chain card',
+  S_COPYC:(gs,s,t)=>logName(gs,s)+' copies the last spell on the chain',
+  T_NEGATE:(gs,s,t)=>logName(gs,s)+' negates the last chain card',
+  T_GNEGATE:(gs,s,t)=>logName(gs,s)+' negates the previous card; only Great Negate or Greatest Negate can answer',
+  T_GRTSTNEGATE:(gs,s,t)=>logName(gs,s)+' negates the previous card; no response is allowed',
+  T_CNEGATE:(gs,s,t)=>logName(gs,s)+' negates the whole chain',
+  T_NOU:(gs,s,t)=>logName(gs,s)+' negates the targeted effect and turns it back on '+logName(gs,t),
+  T_THOLE:(gs,s,t)=>logName(gs,t)+' loses the Blessing they just played',
+  T_LSCREAM:(gs,s,t)=>logName(gs,s)+' negates the offering-targeting effect; '+logName(gs,t)+' mills 2 personal cards',
+  T_ODENIAL:(gs,s,t)=>logName(gs,t)+' loses their normal offering this turn',
+  T_UNFORT:(gs,s,t)=>logName(gs,t)+' loses offerings placed this turn; '+logName(gs,s)+' gains 1 offering slot'
+};
+function logEffectText(gs, card, src, tgt) {
+  const f = EFFECT_LOG[card?.id];
+  return (f ? f(gs,src,tgt) : logEffectFallback(gs,card,src,tgt)).replace(/\.$/, '');
+}
+
+// ─────────────────────────────────────────
+// RESOLUTION ZONE
+// ─────────────────────────────────────────
+function pushRZ(gs, card, src, tgt=null, announce=true) {
+  gs.rz.push({card, src, tgt});
+  if(announce) L(logName(gs,src)+' '+logActionVerb(card)+' '+card.name+' ['+typeLabel(card).toUpperCase()+']'+logTargetText(gs, src, tgt, card),'hi');
+}
+
+// Resolve the entire stack, then call cb
+function resolveAll(gs, cb) {
+  if(!gs.rz.length) { _afterResolve(gs, cb); return; }
+  const e = gs.rz[gs.rz.length-1];
+
+  // Let the browser visibly show the current top/last chain card before it resolves.
+  // This matters when nobody has a response: without an async pause, the card can be
+  // pushed and immediately popped in the same frame, making it look like it never hit
+  // the Resolution Zone.
+  if(!e._previewedForResolve) {
+    e._previewedForResolve = true;
+    renderAll(gs);
+    setTimeout(()=>resolveAll(gs, cb), CHAIN_PRE_RESOLVE_MS);
+    return;
+  }
+
+  if(e.negated){
+    gs.rz.pop();
+    dismissResolvedPopup(e.card);
+    L(e.card.name+' is negated; no effect','warn');
+    gs.disc.push(e.card);
+    renderAll(gs);
+    if(gs.over) { if(cb) cb(); return; }
+    setTimeout(()=>resolveAll(gs, cb), RESOLVE_STEP_MS);
+    return;
+  }
+
+  gs.rz.pop();
+  dismissResolvedPopup(e.card);
+  const def = DEF[e.card.id];
+  L(e.card.name+' resolves: '+logEffectText(gs, e.card, e.src, e.tgt),'');
+  if(def?.fx) def.fx(gs, e.src, e.tgt ?? null);
+  gs.disc.push(e.card);
+  renderAll(gs);
+  if(gs.over) { if(cb) cb(); return; }
+  // If a response window is open but player no longer has anything to play, auto-close it
+  if(UI.awaitResp && !humanHasResponse(gs, UI.respTrig)) {
+    L('No response available; resolving chain','');
+    const f=UI.respDone; UI.awaitResp=false; UI.respTrig=null; UI.respDone=null;
+    renderAll(gs);
+    setTimeout(()=>resolveAll(gs, ()=>{ if(f) f(); if(cb) cb(); }), RESOLVE_STEP_MS);
+    return;
+  }
+  setTimeout(()=>resolveAll(gs, cb), RESOLVE_STEP_MS);
+}
+
+function _afterResolve(gs, cb) {
+  // Handle legacy Tears modal flow
+  if(gs._tearsPending && gs.P[0].human && gs.disc.length>=3) {
+    const src=gs._tearsPending.src;
+    gs._tearsPending=null;
+    showTearsModal(gs, src);
+    GS._tearsResolveCb=cb;
+    return;
+  }
+  // Handle Underhanded Steal slot choice after the chain clears
+  if(gs._stealOfferingPending && gs.P[0].human) {
+    openStealOfferingModal(gs, cb);
+    return;
+  }
+  // Handle Blatant Strobbery hand choice after the chain clears
+  if(gs._blatantStrobberyPending && gs.P[0].human) {
+    openBlatantStrobberyModal(gs, cb);
+    return;
+  }
+  // Handle Deck Spy pick (human picks 1 of top 3 to keep)
+  if(gs._glimpsePending && gs.P[0].human) {
+    const {src, top} = gs._glimpsePending;
+    gs._glimpsePending = null;
+    const opts = '<div class="choice-card-grid">'+top.map((c,i)=>
+      readableCardHTML(c,{label:'Top Card #'+(i+1),onclick:'doGlimpsePick('+i+')'})
+    ).join('')+'</div>';
+    openModal('Deck Spy', '<div style="margin-bottom:10px;color:var(--ow);">Choose 1 card to add to your hand. The other cards return to the draw pile.</div>'+opts, '',
+      ()=>{ if(cancelPendingPlayUndo(GS)) return; closeModal(); if(cb) cb(); });
+    GS._glimpseTop = top;
+    GS._glimpseCb = cb;
+    return;
+  }
+  // Sync human's offersLeft with any bonus gained this turn
+  const hp=gs.P[0];
+  if(hp.bonus>0 && hp.offersLeft<=0) hp.offersLeft=hp.bonus;
+  else if(hp.bonus>0) hp.offersLeft=Math.max(hp.offersLeft, hp.bonus);
+  renderAll(gs);
+  // (Martyr/Ash Wraith/Hollowed One removed)
+  // Handle deferred rebirth modal
+  if(gs._rebirthPending != null) {
+    const src = gs._rebirthPending;
+    gs._rebirthPending = null;
+    if(gs.P[src].human && gs.disc.length) {
+      openRebirthModal(gs, src, cb);
+      return;
+    }
+  }
+  if(cb) cb();
+}
+
+function doMartyrYes() {
+  closeModal();
+  const entry=GS._martyrEntry; GS._martyrEntry=null;
+  const cb=GS._martyrCb; GS._martyrCb=null;
+  const slot=NS(GS.P[entry.pi]);
+  if(slot!==-1){GS.P[entry.pi].offerings[slot]=true;if(!GS.P[entry.pi].offeredCards)GS.P[entry.pi].offeredCards=Array(15).fill(null);GS.P[entry.pi].offeredCards[slot]={...entry.card};L('You add '+entry.card.name+' as an offering','good');}
+  renderAll(GS); if(cb) cb();
+}
+function doMartyrNo() {
+  closeModal();
+  const entry=GS._martyrEntry; GS._martyrEntry=null;
+  const cb=GS._martyrCb; GS._martyrCb=null;
+  GS.disc.push(entry.card);
+  L('You leave '+entry.card.name+' in the discard','');
+  renderAll(GS); if(cb) cb();
+}
+
+// ─────────────────────────────────────────
+// RESPONSE WINDOW
+// trigger: 'any'|'summon'|'spell'|'moff' — what the AI just did
+// Always calls cb — never hangs
+// ─────────────────────────────────────────
+// Returns whether the current top card restricts responses.
+// Great Negate can only be answered by Great Negate or Greatest Negate.
+// Greatest Negate cannot be answered at all.
+function responseRestriction(gs) {
+  const top = gs?.rz?.length ? gs.rz[gs.rz.length-1] : null;
+  const id = top?.card?.id;
+  if(id==='T_GRTSTNEGATE') return 'none';
+  if(id==='T_GNEGATE') return 'great_only';
+  return 'normal';
+}
+
+function trapIsReady(gs, trap) {
+  if(!trap) return false;
+  if(trap.setTurn == null || trap.setBy == null) return true;
+  // A Trap cannot be activated during the same player's turn in which it was set.
+  // It becomes live as soon as play passes to another player, even within the same round.
+  return !((gs?.turn || 0) === trap.setTurn && gs?.cur === trap.setBy);
+}
+
+function markTrapSet(gs, trap, by=null) {
+  if(trap) {
+    trap.setTurn = gs?.turn || 0;
+    trap.setBy = by ?? gs?.cur ?? 0;
+  }
+  return trap;
+}
+
+function canActivateTrapOnOwnTurn(gs, pi, trap) {
+  if(!gs || !trap || gs.over || gs.cur!==pi || gs._drawPhase || UI.awaitResp) return false;
+  return canActivateSetTrap(gs, pi, trap, 'any', pi);
+}
+
+function canPlayHandResponse(gs, pi, card) {
+  if(!card || card.type!=='spell') return false;
+  const restriction = responseRestriction(gs);
+  if(restriction!=='normal') return false;
+  return canPay(gs, pi, card);
+}
+
+// Returns true if the human currently has anything playable as a response
+function humanHasResponse(gs, trigger) {
+  const p = gs.P[0];
+  const hasHandPlay = p.hand.some(c=>canPlayHandResponse(gs,0,c));
+  const hasSetTrap  = p.traps.some(t=>canActivateSetTrap(gs, 0, t, trigger, gs.cur));
+  return hasHandPlay || hasSetTrap;
+}
+
+function openResponseWindow(gs, trigger, cb) {
+  if(!humanHasResponse(gs, trigger)) { cb(); return; }
+
+  UI.awaitResp = true;
+  UI.respTrig  = trigger;
+  UI.respDone  = () => {
+    UI.awaitResp = false;
+    UI.respTrig  = null;
+    UI.respDone  = null;
+    hideRespPopup();
+    renderAll(gs);
+    cb();
+  };
+  // Show response popup with the top card info
+  showRespPopup(gs);
+  renderAll(gs);
+}
+
+function showRespPopup(gs) {
+  const popup=document.getElementById('resp-popup');
+  if(!popup) return;
+  const top=gs.rz.length?gs.rz[gs.rz.length-1]:null;
+  const cardTxt=document.getElementById('resp-popup-card');
+  if(top && cardTxt) {
+    cardTxt.textContent='Card: '+top.card.name+' ('+gs.P[top.src].name+')';
+  } else if(cardTxt) {
+    cardTxt.textContent='';
+  }
+  popup.classList.add('show');
+}
+
+function hideRespPopup() {
+  const popup=document.getElementById('resp-popup');
+  if(popup) popup.classList.remove('show');
+}
+
+function closeResponse() {
+  hideRespPopup();
+  if(UI.respDone) { const f=UI.respDone; UI.respDone=null; UI.awaitResp=false; f(); }
+}
+
+// Human activates a face-down trap from their trap slots.
+// During response windows, traps answer the current chain as before.
+// During your own main phase, a trap can be used if it was not set during this same player's turn and its effect has a legal chain/trigger.
+function activateSetTrap(slotIdx) {
+  const gs=GS, p=gs.P[0];
+  const trap=p.traps[slotIdx];
+  if(!trap) return;
+
+  if(UI.awaitResp) {
+    if(!canActivateSetTrap(gs, 0, trap, UI.respTrig, gs.cur)) {
+      if(!trapIsReady(gs, trap)) L(trap.name+' cannot be activated on the same turn it was set','warn');
+      else L(trap.name+" cannot be activated now (wrong trigger)",'warn');
+      return;
+    }
+    p.traps[slotIdx]=null;
+    // Determine target: for traps that target opponents, pick the current actor
+    const tgt = gs.cur; // the AI player whose action triggered this
+    pushRZ(gs, trap, 0, tgt);
+    // Close response and resolve
+    const f=UI.respDone; UI.awaitResp=false; UI.respTrig=null; UI.respDone=null;
+    resolveAll(gs, ()=>{ renderAll(gs); if(f) f(); });
+    return;
+  }
+
+  if(gs.cur===0 && !gs._drawPhase) {
+    if(!trapIsReady(gs, trap)) {
+      L(trap.name+' cannot be activated on the same turn it was set','warn');
+      return;
+    }
+    if(!canActivateTrapOnOwnTurn(gs, 0, trap)) {
+      L(trap.name+' has no valid activation right now','warn');
+      return;
+    }
+    p.traps[slotIdx]=null;
+    pushRZ(gs, trap, 0, 0);
+    aiTrap(gs,0,'any');
+    renderAll(gs);
+    openResponseWindow(gs,'any',()=>resolveAll(gs,()=>renderAll(gs)));
+  }
+}
+
+// ─────────────────────────────────────────
+// AI
+// ─────────────────────────────────────────
+function bestTgt(gs, src) {
+  let b=-1, bn=-1;
+  gs.P.forEach((p,i)=>{ if(i!==src && OC(p)>bn){bn=OC(p);b=i;} });
+  return b===-1 ? null : b;
+}
+
+function bestTrapTgt(gs, src) {
+  let b=null, bn=0;
+  gs.P.forEach((p,i)=>{
+    if(i===src) return;
+    const count=p.traps.filter(Boolean).length;
+    if(count>bn){bn=count;b=i;}
+  });
+  return b;
+}
+
+function bestFingerPointTarget(gs, src, actor=null) {
+  if(actor!=null && actor!==src && gs.P[actor]) return actor;
+  const leader=aiThreatLeader(gs,src);
+  if(leader!=null && leader!==src) return leader;
+  for(let i=0;i<gs.P.length;i++) if(i!==src) return i;
+  return null;
+}
+
+
+// AI priority helpers: race toward 15 offerings, but spend responses to survive or stop a win.
+function aiOfferGainFromCard(gs, pi, card) {
+  if(!card || card.type!=='tithe') return 0;
+  const p=gs.P[pi];
+  const def=DEF[card.id]||{};
+  return Math.max(1, def.ofv||1) + Math.max(0, p.bonus||0);
+}
+
+function aiBestOfferIndex(gs, pi) {
+  const p=gs.P[pi];
+  let best=-1, bestScore=-Infinity;
+  p.hand.forEach((c,i)=>{
+    if(c.type!=='tithe') return;
+    const def=DEF[c.id]||{};
+    let score=100*aiOfferGainFromCard(gs,pi,c);
+    if(def.onOffer) score+=24;
+    if(c.id==='M_OFEAST') score+=18;
+    if(c.id==='M_OALMS') score+=10;
+    if(c.id==='M_HAVNYS' && p.pdeck?.length) score-=8; // prefer activating it before normal offering
+    if(c.id==='M_ELD_SOUL' && DEF.M_ELD_SOUL.blessingReq?.(gs,pi)) score-=9999; // use it as the win Blessing instead
+    if((def.blessingCost||0)>0 && !p.blessing && OC(p)<9) score-=16; // keep engine Blessings early when not racing
+    if(score>bestScore){bestScore=score;best=i;}
+  });
+  return best;
+}
+
+function aiBestOfferGain(gs, pi) {
+  const idx=aiBestOfferIndex(gs,pi);
+  return idx===-1 ? 0 : aiOfferGainFromCard(gs,pi,gs.P[pi].hand[idx]);
+}
+
+function aiProjectedOfferCount(gs, pi) {
+  return OC(gs.P[pi]) + aiBestOfferGain(gs,pi);
+}
+
+function aiCanWinByOffering(gs, pi) {
+  const p=gs.P[pi];
+  return !p.denied && p.offersLeft>0 && aiBestOfferIndex(gs,pi)!==-1 && aiProjectedOfferCount(gs,pi)>=15;
+}
+
+function aiThreatLeader(gs, src) {
+  let b=null, best=-1;
+  gs.P.forEach((p,i)=>{
+    if(i===src) return;
+    const score=OC(p)*10 + aiBestOfferGain(gs,i);
+    if(score>best){best=score;b=i;}
+  });
+  return b;
+}
+
+function aiShouldPlayBlessing(gs, pi, card) {
+  if(!card || card.type!=='tithe') return false;
+  const p=gs.P[pi];
+  const def=DEF[card.id]||{};
+  if(card.id==='M_ELD_SOUL') return !!def.blessingReq?.(gs,pi); // direct win condition
+  const rc=def.blessingCost||0;
+  if(OC(p)<rc) return false;
+  if(aiCanWinByOffering(gs,pi)) return false;
+  // Once close to 15, do not spend offerings on engines unless they are free.
+  if(rc>0 && OC(p)>=11) return false;
+  // Do not empty the AI's board just to build an engine; keep momentum toward 15.
+  if(rc>0 && (OC(p)-rc)<3) return false;
+  return true;
+}
+
+function aiSpellAdvancesWin(card) {
+  return ['S_TITHE','S_GRAVE','S_HOLLOW','S_SAC','S_DRAW2','S_RJUG','S_DRAW1','S_VASE','S_SCROUNGE','S_TAKEB'].includes(card?.id);
+}
+
+function aiCardThreatensPlayer(gs, card, targetPi, actor, trigger) {
+  if(!card || actor===targetPi) return false;
+  const def=DEF[card.id]||{};
+  if(card.tgt===targetPi && ['opp','player'].includes(def.target)) return true;
+  if(cardTargetsOfferingEffect(card) && def.target==='all_opp') return true;
+  if(card.id==='S_SMITE' && gs.P[targetPi].blessing && card.tgt===targetPi) return true;
+  if(card.id==='S_HOUSE' && card.tgt===targetPi && gs.P[targetPi].traps.some(Boolean)) return true;
+  if(['S_STROBBERY','S_BSTROBERRY','S_PULSE'].includes(card.id) && card.tgt===targetPi && gs.P[targetPi].hand.length) return true;
+  return trigger==='moff' && actor!=null && actor!==targetPi && aiProjectedOfferCount(gs,actor)>=15;
+}
+
+function aiResponseScore(gs, pi, option, trigger, actor) {
+  const top = gs.rz?.length ? gs.rz[gs.rz.length-1] : null;
+  const topCard = top?.card ? {...top.card, tgt:top.tgt} : null;
+  let score=0;
+
+  // Save self first: stop effects aimed at this AI's offerings, hand, traps, or Blessing.
+  if(topCard && aiCardThreatensPlayer(gs,topCard,pi,top.src,trigger)) score+=900;
+
+  // Stop any player who is about to hit 15 offerings.
+  if(actor!=null && actor!==pi) {
+    const projected = trigger==='moff' ? aiProjectedOfferCount(gs,actor) : OC(gs.P[actor]);
+    if(projected>=15) score+=850;
+    else if(OC(gs.P[actor])>=13) score+=420;
+    else if(OC(gs.P[actor])>=11) score+=160;
+  }
+
+  // Stop a leader's engine card if it directly helps them race.
+  if(top && top.src!==pi && OC(gs.P[top.src])>=10 && aiSpellAdvancesWin(top.card)) score+=260;
+  if(trigger==='blessing' && actor!=null && actor!==pi && OC(gs.P[actor])>=9) score+=180;
+
+  // Prefer the correct defensive tools for the job.
+  const id=option?.id;
+  if(id==='T_UNFORT') score+=220;
+  if(id==='T_ODENIAL') score+=170;
+  if(id==='T_LSCREAM'||id==='T_NOU'||id==='S_FPOINT') score+=140;
+  if(id==='T_GRTSTNEGATE') score+=90;
+  if(id==='T_GNEGATE') score+=70;
+  if(id==='T_NEGATE'||id==='S_HTRAP') score+=45;
+  if(id==='T_CNEGATE') score+=60;
+
+  // Do not waste responses on harmless early actions.
+  if(['T_NEGATE','S_HTRAP','S_FPOINT','T_GNEGATE','T_GRTSTNEGATE','T_CNEGATE'].includes(id) && score<180) return 0;
+  if(score<180) return 0;
+  return score;
+}
+
+function aiActivateHavnysIfUseful(gs, pi) {
+  const p=gs.P[pi];
+  const idx=p.hand.findIndex(c=>c.id==='M_HAVNYS');
+  if(idx===-1 || !p.pdeck?.length) return false;
+  // Havnys is extra progress outside the normal offering action; use it when racing or behind.
+  const leader=aiThreatLeader(gs,pi);
+  const urgent = OC(p)>=8 || (leader!=null && OC(gs.P[leader])>=OC(p));
+  if(!urgent) return false;
+  const card=p.hand.splice(idx,1)[0];
+  gs.disc.push(card);
+  DEF['M_HAVNYS'].activateFx(gs,pi,card);
+  return true;
+}
+
+function canActivateSetTrap(gs, pi, trap, trigger, actor=null) {
+  if(!trap || !gs) return false;
+  const p=gs.P[pi];
+  if(p.blessing?.id==='M_TMASTER') return false;
+  const def=DEF[trap.id];
+  if(!def) return false;
+  if(!trapIsReady(gs, trap)) return false;
+  if(def.trigger!=='any' && def.trigger!==trigger) return false;
+
+  const top = gs.rz?.length ? gs.rz[gs.rz.length-1] : null;
+
+  // Generic counter traps can only respond to an actual card on the Resolution Zone.
+  if(def.trigger==='any' && !top) return false;
+
+  const restriction = responseRestriction(gs);
+  if(restriction==='none') return false;
+  if(restriction==='great_only' && trap.id!=='T_GNEGATE' && trap.id!=='T_GRTSTNEGATE') return false;
+
+  // Specific trap requirements. These gates are used by both the flashing UI and the response-window check.
+  if(trap.id==='T_NEGATE' || trap.id==='T_GNEGATE' || trap.id==='T_GRTSTNEGATE' || trap.id==='T_CNEGATE') return !!top;
+  if(trap.id==='T_UNFORT') return actor!=null && actor!==pi && (gs.P[actor]?.offsThisTurn||0)>=2;
+  if(trap.id==='T_ODENIAL') return actor!=null && actor!==pi && trigger==='moff';
+  if(trap.id==='T_THOLE') return actor!=null && actor!==pi && !!gs.P[actor]?.blessing;
+
+  if(trap.id==='T_LSCREAM') {
+    if(!top || top.src===pi) return false;
+    const topDef=DEF[top.card?.id];
+    const targetsThisPlayer = top.tgt===pi || topDef?.target==='all_opp';
+    return trigger==='toff' && targetsThisPlayer && cardTargetsOfferingEffect(top.card);
+  }
+
+  if(trap.id==='T_NOU') {
+    return !!topTargetedEntry(gs, pi);
+  }
+
+  if(def.req) return !!def.req(gs, pi, actor);
+  return true;
+}
+
+// AI uses traps synchronously (no waiting), returns whether one was used.
+// It now favors self-preservation and stopping a player from reaching 15 offerings.
+function aiTrap(gs, actor, trigger) {
+  const candidates=[];
+  for(let pi=0; pi<gs.P.length; pi++) {
+    const p=gs.P[pi];
+    if(pi===actor || p.human) continue;
+
+    p.hand.forEach((c,hi)=>{
+      if(!['S_HTRAP','S_FPOINT'].includes(c.id) || !canPlayHandResponse(gs, pi, c)) return;
+      const score=aiResponseScore(gs,pi,c,trigger,actor);
+      if(score>0) candidates.push({score,pi,kind:'hand',idx:hi,target:c.id==='S_FPOINT'?bestFingerPointTarget(gs,pi,actor):actor});
+    });
+
+    p.traps.forEach((trap,idx)=>{
+      if(!canActivateSetTrap(gs, pi, trap, trigger, actor)) return;
+      const score=aiResponseScore(gs,pi,trap,trigger,actor);
+      if(score>0) candidates.push({score,pi,kind:'trap',idx});
+    });
+  }
+  if(!candidates.length) return false;
+  candidates.sort((a,b)=>b.score-a.score);
+  const pick=candidates[0];
+  const p=gs.P[pick.pi];
+  if(pick.kind==='hand') {
+    const handtrap=p.hand.splice(pick.idx,1)[0];
+    pushRZ(gs,handtrap,pick.pi,pick.target ?? actor);
+    return true;
+  }
+  const trap=p.traps[pick.idx];
+  p.traps[pick.idx]=null;
+  pushRZ(gs,trap,pick.pi,actor);
+  return true;
+}
+
+// Chain: aiTrap → openResponseWindow → resolveAll → done
+function aiAction(gs, triggerType, actor, done) {
+  aiTrap(gs, actor, triggerType);
+  renderAll(gs);
+  openResponseWindow(gs, triggerType, ()=>{
+    resolveAll(gs, done);
+  });
+}
+
+function aiTurn(gs, pi, onDone) {
+  const p = gs.P[pi];
+
+  // Steps run sequentially, each calls next() when done
+  const steps = [
+
+    next => { // Draw
+      p.offsThisTurn=0; p.warded=false; p.vaultUsed=false; p.heartLamentUsed=false; p.debtCollectorUsed=false; p.thievingCatUsed=false; p.offersLeft=1+(p.blessing?.id==='M_GRAVE'?1:0);
+      const ext = (p.blessing?.id==='M_HECA') ? 1 : 0;
+      drw(gs,pi,2+ext);
+      L(N(pi,gs)+' draws '+(2+ext)+' cards');
+      renderAll(gs);
+      setTimeout(next, 350);
+    },
+
+    next => { // Play Tithe: as Blessing or Offer
+      if(!p.blessing) {
+        // Try to place a high-value Tithe as Blessing
+        const priority=['M_SENT','M_GRAVE','M_DCOLLECT','M_THFCAT','M_VAULT','M_HECA','M_TMASTER','M_SIPH'];
+        for(const tid of priority){
+          const ci=p.hand.findIndex(c=>c.id===tid);
+          if(ci!==-1){
+            const card=p.hand[ci]; const def=DEF[card.id];
+            const rc=def?.blessingCost||0;
+            if(aiShouldPlayBlessing(gs,pi,card)){
+              // Pay blessing cost
+              p.hand.splice(ci,1);
+              if(rc>0) rmOff(gs,pi,rc);
+              if(p.blessing){ const old=p.blessing; p.blessing=null; if(DEF[old.id]?.onDiscard)DEF[old.id].onDiscard(gs,pi); gs.disc.push(old); }
+              p.blessing=card;
+              L(N(pi,gs)+' places '+card.name+' in their Blessing Zone','good');
+              aiTrap(gs,pi,'blessing');
+              renderAll(gs);
+              if(gs.rz.length){ openResponseWindow(gs,'blessing',()=>resolveAll(gs,next)); return; }
+              break;
+            }
+          }
+        }
+      }
+      next();
+    },
+
+    next => { // Use once-per-turn Blessing ability
+      aiUseBlessingAbility(gs,pi, used=>{
+        if(used){
+          renderAll(gs);
+          setTimeout(next,250);
+        } else {
+          next();
+        }
+      });
+    },
+
+    next => { // Summon monster if none
+      if(!p.mon) {
+        const mi = p.hand.findIndex(c=>c.type==='monster');
+        if(mi!==-1) {
+          const m = p.hand.splice(mi,1)[0]; p.mon=m;
+          L(N(pi,gs)+' summons '+m.name,'hi');
+          aiTrap(gs,pi,'summon');
+          renderAll(gs);
+          openResponseWindow(gs, 'summon', ()=>resolveAll(gs, next));
+          return;
+        }
+      }
+      next();
+    },
+
+    next => { // Activate Havnys if it helps race toward 15
+      if(aiActivateHavnysIfUseful(gs,pi)){
+        renderAll(gs);
+        setTimeout(next,250);
+        return;
+      }
+      next();
+    },
+
+    next => { // Set a trap face-down
+      const et = p.traps.findIndex(t=>t===null);
+      if(et!==-1) {
+        const ti = p.hand.findIndex(c=>c.type==='trap');
+        if(ti!==-1) {
+          const t=p.hand.splice(ti,1)[0]; p.traps[et]=markTrapSet(gs, t, pi);
+          L(N(pi,gs)+' sets a trap face-down','');
+          renderAll(gs);
+        }
+      }
+      next();
+    },
+
+    next => { // Play a spell: win-first, then protection/disruption
+      const ldr = aiThreatLeader(gs,pi);
+      const trapTgt = bestTrapTgt(gs,pi);
+      let played = false;
+      let spellTrigger = 'any';
+
+      // If we can win by simply offering, go straight to the offering step.
+      const canWinNow = aiCanWinByOffering(gs,pi);
+      if(canWinNow){ next(); return; }
+
+      // Race/self-preservation spells first. Ward is valuable when close to 15.
+      const raceSpells = OC(p)>=10
+        ? ['S_WARD','S_TITHE','S_HOLLOW','S_SAC','S_GRAVE','S_DRAW2','S_RJUG','S_DRAW1','S_VASE','S_SCROUNGE','S_TAKEB']
+        : ['S_TITHE','S_GRAVE','S_HOLLOW','S_SAC','S_DRAW2','S_RJUG','S_DRAW1','S_VASE','S_SCROUNGE','S_TAKEB'];
+      for(const sid of raceSpells) {
+        const ci = p.hand.findIndex(c=>c.id===sid);
+        if(ci!==-1 && canPay(gs,pi,p.hand[ci])) {
+          const card=p.hand[ci]; payCost(gs,pi,card); pushRZ(gs,card,pi,pi);
+          spellTrigger=actionTriggerForCard(card);
+          played=true; break;
+        }
+      }
+
+      // Disrupt only when it prevents a leader/near-winner from outpacing us.
+      if(!played && !canWinNow && ldr!=null && (OC(gs.P[ldr])>=12 || OC(gs.P[ldr])>=OC(p)+2)) {
+        for(const sid of ['S_DCOL','S_DENY','S_STEAL','S_MRUIN','S_SMITE','S_BSTROBERRY','S_STROBBERY','S_PULSE']) {
+          const ci = p.hand.findIndex(c=>c.id===sid);
+          if(ci!==-1 && canPay(gs,pi,p.hand[ci],ldr)) {
+            const card=p.hand[ci]; payCost(gs,pi,card); pushRZ(gs,card,pi,ldr);
+            spellTrigger=actionTriggerForCard(card);
+            played=true; break;
+          }
+        }
+      }
+
+      // Clear traps from the biggest trap board only when close to winning or blocked by a leader.
+      if(!played && trapTgt!=null && (OC(p)>=10 || (ldr!=null && OC(gs.P[ldr])>=12))) {
+        const ci = p.hand.findIndex(c=>c.id==='S_HOUSE');
+        if(ci!==-1 && canPay(gs,pi,p.hand[ci],trapTgt)) {
+          const card=p.hand[ci]; payCost(gs,pi,card); pushRZ(gs,card,pi,trapTgt);
+          spellTrigger=actionTriggerForCard(card);
+          played=true;
+        }
+      }
+
+      if(played) {
+        aiAction(gs,spellTrigger,pi, next);
+      } else {
+        next();
+      }
+    },
+
+    next => { // Make offerings until out of offers or out of Tribute cards
+      const offerLoop = () => {
+        if(p.denied){
+          L(N(pi,gs)+"'s offering was denied",'warn');
+          p.offersLeft=0; p.bonus=0; renderAll(gs); next(); return;
+        }
+        if(p.offersLeft<=0){ p.bonus=0; renderAll(gs); next(); return; }
+        const oi=aiBestOfferIndex(gs,pi);
+        if(oi===-1){ p.offersLeft=0; p.bonus=0; renderAll(gs); next(); return; }
+
+        aiTrap(gs,pi,'moff');
+        renderAll(gs);
+        openResponseWindow(gs, 'moff', ()=>{
+          resolveAll(gs, ()=>{
+            if(!p.denied){
+              const idx=aiBestOfferIndex(gs,pi);
+              if(idx!==-1){
+                const offerCard=p.hand.splice(idx,1)[0];
+                const od=DEF[offerCard.id];
+                if(od?.onOffer) od.onOffer(gs,pi);
+                const val=od?.ofv||1;
+                const total=Math.max(1,val)+Math.max(0,p.bonus||0);
+                L(N(pi,gs)+' offers '+offerCard.name+' to their Rite: +'+total+' slot'+(total>1?'s':'') ,'good');
+                p.offersLeft--;
+                p.bonus=0;
+                placeOff(gs,pi,total,offerCard);
+              } else {
+                p.offersLeft=0;
+              }
+            } else {
+              L(N(pi,gs)+"'s offering denied",'warn');
+              p.offersLeft=0; p.bonus=0;
+            }
+            renderAll(gs);
+            if(gs.over) { next(); return; }
+            setTimeout(offerLoop,220);
+          });
+        });
+      };
+      offerLoop();
+    },
+
+    next => { // End turn cleanup
+      p.denied=false; p.offersLeft=1+p.bonus; p.bonus=0; p.vaultUsed=false; p.warded=false; p.offsThisTurn=0;
+      enfLim(gs, pi, ()=>{ renderAll(gs); setTimeout(next,200); });
+    },
+
+  ];
+
+  // Run steps in sequence
+  let i=0;
+  const run = () => {
+    if(gs.over || i>=steps.length) { if(onDone) onDone(); return; }
+    steps[i++](run);
+  };
+  setTimeout(run, 300);
+}
+
+// ─────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────
+function renderAll(gs) {
+  if(!gs) return;
+  // Skip game rendering during draft phase
+  if(DRAFT.active) { updateTargetAlert(null); return; }
+  rOpps(gs); rCenter(gs); rPlayer(gs); rPanel(gs); updateTargetAlert(gs);
+}
+
+function playerTargetedByOpponent(gs) {
+  if(!gs || !gs.rz || !gs.rz.length) return false;
+  return gs.rz.some(e=>{
+    if(!e || e.src===0) return false;
+    const def=DEF[e.card?.id];
+    return e.tgt===0 || def?.target==='all_opp';
+  });
+}
+
+function updateTargetAlert(gs) {
+  const alert=document.getElementById('target-alert');
+  if(!alert) return;
+  alert.classList.toggle('show', playerTargetedByOpponent(gs));
+}
+
+function rOpps(gs) {
+  const list=document.getElementById('opponents-list');
+  const opponents=gs.P.slice(1);
+  const renderOpponent = p => {
+    const pi=p.id;
+    const act=gs.cur===pi && !gs.over;
+    let trH=''; for(let t=0;t<3;t++) trH+=p.traps[t]?'<div class="otpip">✦</div>':'<div class="otempty"></div>';
+    const blessingLine=p.blessing?'<div class="oblessing" title="Click to view Blessing" onclick="showCardPopupById(GS.P['+pi+'].blessing)">'+
+      '<div class="obless-type">Blessing · '+typeLabel(p.blessing)+'</div>'+
+      '<div class="obless-name">⬡ '+p.blessing.name+'</div>'+
+      '<div class="obless-eff">'+stripTags(cardDescHTML(p.blessing)).slice(0,70)+'</div>'+
+    '</div>':'';
+    return '<div class="opp'+(act?' act':'')+'" id="o'+pi+'">'+
+      '<div class="oh">'+
+        '<span class="oname">'+p.name+'</span>'+
+        (act?'<span class="oact">▶</span>':'')+
+        '<span class="ooffc offering-click" title="View offered cards" onclick="openOfferingsViewer('+pi+')">'+OC(p)+'/15</span>'+
+      '</div>'+
+      blessingLine+
+      '<div class="oinfo">'+
+        '<span class="ooff-num offering-click" title="View offered cards" onclick="openOfferingsViewer('+pi+')">'+OC(p)+'</span>'+
+        '<span class="ooff-lbl">offerings</span>'+
+        '<span style="margin-left:auto;display:flex;gap:2px;">'+trH+'</span>'+
+        '<span class="ohct">'+p.hand.length+'c</span>'+
+      '</div>'+
+    '</div>';
+  };
+  if(list) {
+    list.innerHTML = opponents.map(renderOpponent).join('');
+    return;
+  }
+  opponents.forEach(p=>{
+    const el=document.getElementById('o'+p.id);
+    if(el) el.outerHTML=renderOpponent(p);
+  });
+}
+
+function rCenter(gs) {
+  const dkEl=document.getElementById('dkct');
+  if(dkEl) dkEl.textContent=gs.deck.length;
+  const td=gs.disc[gs.disc.length-1];
+  const dtEl=document.getElementById('dtop');
+  if(dtEl) dtEl.textContent=td?td.name.split(' ')[0]:'—';
+  const dsEl=document.getElementById('dsct');
+  if(dsEl) dsEl.textContent=gs.disc.length+'';
+  const pdEl=document.getElementById('pdkct');
+  if(pdEl) pdEl.textContent=gs.P[0].pdeck?.length||0;
+
+  // Resolution Zone — 7 fixed slots, filled left to right, clickable to view card
+  const now=Date.now();
+  gs._rzNegatedFx=(gs._rzNegatedFx||[]).filter(fx=>!fx.expiresAt || fx.expiresAt>now);
+  for(let i=0;i<7;i++){
+    const slot=document.getElementById('rz'+i);
+    if(!slot) continue;
+    const entry=gs.rz[i];
+    const negFx=(gs._rzNegatedFx||[]).find(fx=>fx.slotIndex===i);
+    const displayEntry=entry || negFx;
+    if(displayEntry){
+      slot.classList.add('filled');
+      const isNegated=!!(entry?.negated || (!entry && negFx));
+      slot.classList.toggle('negated', isNegated);
+      const isTop=entry && i===gs.rz.length-1;
+      const card=displayEntry.card;
+      const cls=card.type==='trap'?'rzt':card.type==='tithe'?'rztithe':'rzs';
+      const ownerName=gs.P[displayEntry.src]?.name || 'Unknown';
+      slot.innerHTML=(isNegated?'<div class="rztop">✕ NEGATED</div>':(isTop?'<div class="rztop">▲ NEXT</div>':''))+
+        '<div class="rz-mini '+cls+'">'+
+          '<div class="rzm-type">'+typeLabel(card)+'</div>'+
+          '<div class="rzm-name">'+card.name+'</div>'+
+          '<div class="rzm-owner">'+ownerName+'</div>'+
+        '</div>'+(isNegated?'<div class="rz-cancel">✕</div>':'');
+      // Click to view full card details
+      const cardRef=displayEntry.card;
+      slot.onclick=()=>showCardPopupById(cardRef);
+    } else {
+      slot.classList.remove('filled','negated');
+      slot.innerHTML='<span class="rzmt-empty">—</span>';
+      slot.onclick=null;
+    }
+  }
+}
+
+function rPlayer(gs) {
+  const p=gs.P[0];
+  const myTurn=gs.cur===0;
+  const resp=UI.awaitResp;
+
+  // Blessing Zone
+  const pm=document.getElementById('pmon');
+  if(pm){
+    pm.innerHTML='<span class="lbl">Blessing</span>';
+    pm.onclick=null;
+    pm.title='';
+    pm.style.cursor='default';
+    if(p.blessing){
+      const def=DEF[p.blessing.id];
+      pm.innerHTML+='<div class="mname">'+p.blessing.name+'</div>'
+        +'<div class="mpass">'+(def?.blessingCost>0?def.blessingCost+' off':'free')+'</div>';
+      pm.style.borderColor='var(--yo)';
+      pm.style.cursor='pointer';
+      pm.title='Click to view your Blessing and full effects';
+      pm.onclick=(e)=>{ e.stopPropagation(); showCardPopupById(p.blessing); };
+    } else {
+      pm.innerHTML+='<div class="empty">+</div>';
+      pm.style.borderColor='var(--mc)';
+    }
+  }
+
+  // Traps
+  const pt=document.getElementById('ptrow');
+  if(pt){
+    pt.innerHTML='';
+    for(let t=0;t<3;t++){
+      const ts=document.createElement('div'); ts.className='pts';
+      if(p.traps[t]){
+        const trap=p.traps[t]; const def=DEF[trap.id];
+        const ready=trapIsReady(gs, trap);
+        const canActivateResp=resp && canActivateSetTrap(gs, 0, trap, UI.respTrig, gs.cur);
+        const canActivateTurn=!resp && myTurn && !gs._drawPhase && canActivateTrapOnOwnTurn(gs, 0, trap);
+        const canActivate=canActivateResp||canActivateTurn;
+        const fd=document.createElement('div');
+        fd.className='ptfd'+(canActivate?' trap-activatable':'');
+        // Show name + truncated effect, translucent
+        const shortEff=(def?.desc||'').replace(/\[Req\][^.]+\./,'').replace(/\[Cost\][^.]+\./,'').replace(/\[Effect\]/,'').trim().slice(0,50);
+        const status=ready?'READY':'SET THIS TURN';
+        fd.innerHTML='<div class="ptfd-sym">'+(canActivate?'⚡':(ready?'✦':'⌛'))+'</div>'
+          +'<div class="ptfd-name">'+trap.name+'</div>'
+          +'<div class="ptfd-eff">'+status+' · '+shortEff+'</div>';
+        fd.style.cursor='pointer';
+        fd.title=canActivate?'Click to activate this trap':(ready?'Click to view card details':'This trap cannot activate during the same turn it was set');
+        fd.addEventListener('mouseenter', e=>showCardPopup(e, trap));
+        fd.addEventListener('mouseleave', hideCardPopup);
+        fd.addEventListener('click',()=>{
+          if(canActivate) activateSetTrap(t);
+          else if(!ready && myTurn && !resp) activateSetTrap(t);
+          else showCardPopupById(trap);
+        });
+        if(canActivate){
+          fd.style.background='rgba(0,80,20,.85)';
+          fd.style.animation='blk .8s infinite';
+          fd.title='Click to activate this trap';
+        } else if(!ready) {
+          fd.style.opacity='.72';
+        }
+        ts.appendChild(fd);
+      } else {
+        const tl=document.createElement('span');tl.className='ptempty';tl.textContent='TRAP';
+        ts.appendChild(tl);
+      }
+      pt.appendChild(ts);
+    }
+  }
+
+  // Offering count
+  const pbEl=document.getElementById('pbig');
+  if(pbEl){ pbEl.textContent=OC(p); pbEl.classList.add('offering-click'); pbEl.title='View your offered cards'; pbEl.onclick=()=>openOfferingsViewer(0); }
+  const lim=HL(p);
+  const psEl=document.getElementById('pstat');
+  if(psEl) psEl.textContent='Hand: '+p.hand.length+'/'+(lim===Infinity?'∞':lim);
+
+  // Personal deck count
+  const pdEl=document.getElementById('pdkct');
+  if(pdEl) pdEl.textContent=p.pdeck?.length||0;
+
+  // HAND — straight row, no fanning
+  const ha=document.getElementById('hand');
+  if(!ha) return;
+  ha.innerHTML='';
+  const count=p.hand.length;
+  if(!count) return;
+
+  p.hand.forEach((c,i)=>{
+    const sel=UI.sel===i;
+    const canAct=myTurn||resp;
+    const playableNow = resp ? canPlayHandResponse(gs,0,c) : canPay(gs,0,c);
+    const unplay=canAct && !playableNow;
+    const isResp=resp&&!sel&&canPlayHandResponse(gs,0,c);
+    const el=mkCEl(c,sel,unplay&&canAct,false);
+    if(isResp) el.classList.add('resp');
+    el.style.transform='none';
+    el.style.left='auto';
+    el.style.zIndex=sel?90:i;
+    el.addEventListener('click',()=>selCard(i));
+    el.addEventListener('mouseenter', e=>{
+      showCardPopup(e, c);
+    });
+    el.addEventListener('mouseleave', hideCardPopup);
+    ha.appendChild(el);
+  });
+}
+
+function mkCEl(card, sel, unplay, back) {
+  const el=document.createElement('div');
+  if(back){el.className='card cbk';return el;}
+  const typeClass=card.type==='spell'?'sc':card.type==='trap'?'tc':'mc';
+  const suit=card.type==='spell'?'♠':card.type==='trap'?'♣':'♦';
+  const isEldritch=card.id&&card.id.startsWith('M_ELD_');
+  el.className='card '+typeClass+(sel?' sel':'')+(unplay?' nop':'')+(isEldritch?' eldritch-card':'');
+  el.dataset.suit=suit;
+
+  el.innerHTML=
+    '<div class="ctype">'+typeLabel(card)+'</div>'+
+    '<div class="cname">'+card.name+'</div>'+
+    '<div class="cdesc">'+cardDescHTML(card)+'</div>';
+
+  el.addEventListener('mouseenter', e=>showCardPopup(e, card));
+  el.addEventListener('mouseleave', hideCardPopup);
+  return el;
+}
+
+function rPanel(gs) {
+  const myTurn=gs.cur===0 && !gs.over;
+  const resp=UI.awaitResp;
+  const p=gs.P[0];
+  const inDraw=gs._drawPhase===true;
+
+  document.getElementById('pbadge').textContent=
+    inDraw?'DRAW PHASE':resp?'RESPOND':myTurn?'YOUR TURN':gs.P[gs.cur].name.toUpperCase()+"'S TURN";
+  document.getElementById('tinfo').textContent='Turn '+gs.turn+' · '+gs.P[gs.cur].name+' · '+gs.P.length+'P';
+  const pcBadge=document.getElementById('player-count-badge');
+  if(pcBadge) pcBadge.textContent=gs.P.length+'P · '+(gs.P.length-1)+' Opp';
+  document.getElementById('rbanner').style.display=resp?'inline-block':'none';
+
+  const hasSel=UI.sel!==null&&p.hand[UI.sel];
+  const canAct=myTurn||resp;
+  const selCard=hasSel?p.hand[UI.sel]:null;
+  const selectedPlayableNow = hasSel ? (resp ? canPlayHandResponse(gs,0,selCard) : canPay(gs,0,selCard)) : false;
+  const selIsTithe=selCard?.type==='tithe';
+
+  // Hide action buttons during draw phase
+  const btns=['bplay','boffer','bblessing','bpass'];
+  btns.forEach(id=>{const b=document.getElementById(id);if(b)b.style.display=inDraw?'none':'';});
+
+  if(!inDraw){
+    const bp=document.getElementById('bplay');
+    if(bp) bp.disabled=!(canAct&&hasSel&&selectedPlayableNow);
+
+    const selIsMonster=selIsTithe;
+    const offerReady=myTurn&&p.offersLeft>0&&!p.denied&&selIsTithe;
+    const ob=document.getElementById('boffer');
+    if(ob){
+      ob.disabled=!offerReady;
+      ob.textContent=p.offersLeft>1?'Offer ('+p.offersLeft+' left)':'Offer';
+      if(offerReady) ob.classList.add('rdy'); else ob.classList.remove('rdy');
+    }
+
+    const def2=selCard?DEF[selCard.id]:null;
+    const rc=def2?.blessingCost??-1;
+    const blessingPayable=rc>=0&&OC(p)>=rc;
+    const blessingReady=myTurn&&selIsTithe&&blessingPayable;
+    const rb=document.getElementById('bblessing');
+    if(rb){
+      rb.disabled=!blessingReady;
+      rb.textContent=rc===0?'Blessing (Free)':'Blessing ('+rc+' off)';
+      if(blessingReady) rb.classList.add('rdy'); else rb.classList.remove('rdy');
+    }
+
+    const pb=document.getElementById('bpass');
+    if(pb){
+      pb.disabled=!(myTurn||resp);
+      pb.textContent=resp?'Pass Response':'End Turn';
+    }
+  }
+
+  // Heart of the Lament mill button
+  let heartBtn=document.getElementById('btn-heart-mill');
+  const heartReady=myTurn&&p.blessing?.id==='M_HEART_LAMENT'&&!p.heartLamentUsed&&!inDraw&&!UI.awaitResp;
+  if(heartReady&&!heartBtn){
+    heartBtn=document.createElement('button');
+    heartBtn.id='btn-heart-mill';heartBtn.className='btn bb';
+    heartBtn.textContent='Heart Mill';heartBtn.onclick=hHeartMill;
+    document.getElementById('abar').appendChild(heartBtn);
+  } else if(!heartReady&&heartBtn) heartBtn.remove();
+
+  let debtBtn=document.getElementById('btn-debt-collector');
+  const debtReady=myTurn&&p.blessing?.id==='M_DCOLLECT'&&!p.debtCollectorUsed&&!inDraw&&!UI.awaitResp;
+  if(debtReady&&!debtBtn){
+    debtBtn=document.createElement('button');
+    debtBtn.id='btn-debt-collector';debtBtn.className='btn bb';
+    debtBtn.textContent='Debt Collect';debtBtn.onclick=hDebtCollector;
+    document.getElementById('abar').appendChild(debtBtn);
+  } else if(!debtReady&&debtBtn) debtBtn.remove();
+
+  let catBtn=document.getElementById('btn-thieving-cat');
+  const catReady=myTurn&&p.blessing?.id==='M_THFCAT'&&!p.thievingCatUsed&&!inDraw&&!UI.awaitResp;
+  if(catReady&&!catBtn){
+    catBtn=document.createElement('button');
+    catBtn.id='btn-thieving-cat';catBtn.className='btn bb';
+    catBtn.textContent='Thieving Cat';catBtn.onclick=hThievingCat;
+    document.getElementById('abar').appendChild(catBtn);
+  } else if(!catReady&&catBtn) catBtn.remove();
+}
+
+// ─────────────────────────────────────────
+// HUMAN ACTIONS
+// ─────────────────────────────────────────
+function doHumanDraw(gs) {
+  const p=gs.P[0];
+  p.offsThisTurn=0; p.warded=false; p.vaultUsed=false; p.heartLamentUsed=false; p.debtCollectorUsed=false; p.thievingCatUsed=false; p.offersLeft=1+(p.blessing?.id==='M_GRAVE'?1:0);
+  // Refresh Heart of the Lament at the start of the player's turn
+  // Show draw choice UI — player picks public or personal for each of 2 draws
+  gs._drawPhase=true;
+  gs._drawsLeft=2;
+  gs.phase='draw'; gs.cur=0;
+  const dc=document.getElementById('draw-choice');
+  if(dc) dc.classList.add('active');
+  const btn=document.getElementById('btn-draw-personal');
+  if(btn) btn.disabled=(!p.pdeck||!p.pdeck.length);
+  renderAll(gs);
+  L('Draw phase: choose 2 draws','hi');
+}
+
+function selCard(i) {
+  if(!GS) return;
+  if(!(GS.cur===0 || UI.awaitResp)) return;
+  UI.sel = UI.sel===i ? null : i;
+  renderAll(GS);
+}
+
+function hPlay() {
+  if(UI.sel===null) return;
+  const gs=GS, p=gs.P[0], card=p.hand[UI.sel];
+  const resp=UI.awaitResp;
+  if(!card || (resp ? !canPlayHandResponse(gs,0,card) : !canPay(gs,0,card))) {
+    L(card ? card.name+' cannot be played now' : 'Select a card first','warn');
+    return;
+  }
+  const def=DEF[card.id];
+
+  if(card.type==='tithe') {
+    // Havnys activates by discarding from hand — Play button works for it
+    if(card.id==='M_HAVNYS') {
+      if(gs.cur!==0&&!resp){L('Can only activate Havnys on your turn','warn');return;}
+      const idx=UI.sel; UI.sel=null;
+      const c=p.hand.splice(idx,1)[0];
+      gs.disc.push(c);
+      L('You discard Havnys, the Lament','');
+      DEF['M_HAVNYS'].activateFx(gs,0,card);
+      renderAll(gs); return;
+    }
+    // All other Tithes: use Offer or Blessing buttons
+    L('Use Offer or Blessing for Tribute cards','warn');
+    return;
+  }
+
+  if(card.type==='trap') {
+    if(resp) {
+      L('Set traps before activating them','warn');
+      return;
+    }
+    const slot=p.traps.findIndex(t=>t===null);
+    if(slot===-1) { L('No empty trap slots','warn'); return; }
+    p.hand.splice(UI.sel,1); p.traps[slot]=markTrapSet(gs, card, 0);
+    L('You set '+card.name+' face-down; it cannot activate this turn',''); UI.sel=null; renderAll(gs); return;
+  }
+
+  // SPELL
+  if(def.target==='self'||def.target==='all'||def.target==='all_opp') {
+    const savedCard=card; const savedResp=resp;
+    const playSnap=snapshotHumanPlay(gs); const playUid=savedCard.uid;
+    UI.sel=null;
+    payCostHuman(gs, savedCard, ()=>{
+      beginPendingPlayUndo(gs, playSnap, playUid);
+      pushRZ(gs,savedCard,0,0);
+      if(savedResp) {
+        const f=UI.respDone; UI.awaitResp=false; UI.respDone=null;
+        resolveAll(gs, ()=>{ clearPendingPlayUndo(gs); renderAll(gs); if(f) f(); });
+      } else {
+        const trig=actionTriggerForCard(savedCard);
+        aiTrap(gs,0,trig);
+        renderAll(gs);
+        if(gs.rz.length) openResponseWindow(gs, trig, ()=>resolveAll(gs, ()=>{ clearPendingPlayUndo(gs); renderAll(gs); }));
+        else resolveAll(gs, ()=>{ clearPendingPlayUndo(gs); renderAll(gs); });
+      }
+    });
+  } else if(def.target==='opp') {
+    const savedIdx=UI.sel; UI.sel=null;
+    const opts=gs.P.filter(pp=>!pp.human).map(pp=>
+      `<button class="btn bb" onclick="confirmTgt(${pp.id},${savedIdx})">${pp.name} (${OC(pp)}/15)</button>`
+    ).join('');
+    openModal('Choose Target','Select opponent for <b>'+card.name+'</b>:',opts,
+      ()=>{ UI.sel=savedIdx; closeModal(); renderAll(GS); });
+  } else if(def.target==='player') {
+    const savedIdx=UI.sel; UI.sel=null;
+    const choices = card.id==='S_FPOINT' ? gs.P.filter(pp=>pp.id!==0) : gs.P;
+    const opts=choices.map(pp=>{
+      const traps=pp.traps.filter(Boolean).length;
+      const cls=pp.human?'bg':'bb';
+      const label=card.id==='S_FPOINT' ? pp.name : `${pp.name} (${traps} trap${traps!==1?'s':''})`;
+      return `<button class="btn ${cls}" onclick="confirmTgt(${pp.id},${savedIdx})">${label}</button>`;
+    }).join('');
+    const prompt=card.id==='S_FPOINT' ? 'Choose the new target for <b>'+card.name+'</b>:' : 'Select a player for <b>'+card.name+'</b>:';
+    openModal('Choose Target',prompt,opts,
+      ()=>{ UI.sel=savedIdx; closeModal(); renderAll(GS); });
+  }
+}
+
+function confirmTgt(tgt, ci) {
+  closeModal();
+  const gs=GS, p=gs.P[0], card=p.hand[ci];
+  if(!card) return;
+  if(!canPay(gs,0,card,tgt)){L(card.name+' cannot target '+N(tgt,gs),'warn');renderAll(gs);return;}
+  const resp=UI.awaitResp;
+  const playSnap=snapshotHumanPlay(gs); const playUid=card.uid;
+  payCostHuman(gs, card, ()=>{
+    beginPendingPlayUndo(gs, playSnap, playUid);
+    pushRZ(gs,card,0,tgt);
+    if(resp) {
+      const f=UI.respDone; UI.awaitResp=false; UI.respDone=null;
+      resolveAll(gs, ()=>{ clearPendingPlayUndo(gs); renderAll(gs); if(f) f(); });
+    } else {
+      const trig=actionTriggerForCard(card);
+      aiTrap(gs,0,trig);
+      renderAll(gs);
+      if(gs.rz.length) openResponseWindow(gs, trig, ()=>resolveAll(gs, ()=>{ clearPendingPlayUndo(gs); renderAll(gs); }));
+      else resolveAll(gs, ()=>{ clearPendingPlayUndo(gs); renderAll(gs); });
+    }
+  });
+}
+
+// Play a Tithe card as a Blessing (costs offerings, goes to Blessing Zone)
+function hBlessing() {
+  const gs=GS, p=gs.P[0];
+  if(gs.cur!==0 && !UI.awaitResp) return;
+  const sel=UI.sel;
+  if(sel===null || p.hand[sel]?.type!=='tithe'){L('Select a Tribute card to place as Blessing','warn');return;}
+  const card=p.hand[sel];
+  const def=DEF[card.id];
+  const rc=def?.blessingCost||0;
+  if(OC(p)<rc){L('Not enough offerings to pay Blessing cost','warn');return;}
+  // Mark card as being played as Blessing for canPay/payCost
+  const blessingSnap=snapshotHumanPlay(gs);
+  const blessingUid=card.uid;
+  card._asBlessing=true;
+  UI.sel=null;
+  payCostHuman(gs,card,()=>{
+    // Replace existing Blessing if any
+    if(p.blessing){
+      const old=p.blessing; p.blessing=null;
+      if(DEF[old.id]?.onDiscard) DEF[old.id].onDiscard(gs,0);
+      gs.disc.push(old);
+      L('Previous Blessing goes to discard','');
+    }
+    // Check blessingReq if the card has one
+    const rreq=DEF[card.id]?.blessingReq;
+    if(rreq && !rreq(gs,0)){
+      L('Requirement not met: '+card.name+' cannot become a Blessing','warn');
+      restoreHumanPlay(gs, blessingSnap);
+      UI.sel=gs.P[0].hand.findIndex(c=>c.uid===blessingUid);
+      if(UI.sel<0) UI.sel=null;
+      renderAll(gs);
+      return;
+    }
+    delete card._asBlessing;
+    p.blessing=card;
+    // Fire onBlessing if defined
+    if(DEF[card.id]?.onBlessing) DEF[card.id].onBlessing(gs,0);
+    L('You place '+card.name+' in your Blessing Zone','good');
+    if(gs.over) return;
+    // Trigger snare check
+    aiTrap(gs,0,'blessing');
+    renderAll(gs);
+    if(gs.rz.length) openResponseWindow(gs,'blessing',()=>resolveAll(gs,()=>renderAll(gs)));
+    else renderAll(gs);
+  });
+}
+
+// doSummon removed — Tithes use hOffer/hBlessing
+
+
+
+
+function hOffer() {
+  const gs=GS, p=gs.P[0];
+  if(gs.cur!==0 || p.offersLeft<=0 || p.denied) return;
+  const sel=UI.sel;
+  if(sel===null || p.hand[sel]?.type!=='tithe'){L('Select a Tribute card to offer','warn');return;}
+  const card=p.hand[sel]; p.hand.splice(sel,1); UI.sel=null;
+  _executeOffer(gs, card);
+}
+
+function _executeOffer(gs, tithe) {
+  const p=gs.P[0];
+  const def=DEF[tithe.id];
+  if(def?.onOffer) def.onOffer(gs,0);
+  const val=def?.ofv||1;
+  const total=1+p.bonus+(val-1);
+  p.offersLeft--; p.bonus=0;
+  L('You offer '+tithe.name+' to your Rite: +'+total+' slot'+(total>1?'s':'') , 'good');
+  aiTrap(gs,0,'moff');
+  renderAll(gs);
+  if(gs.rz.length){
+    openResponseWindow(gs,'moff',()=>{
+      resolveAll(gs,()=>{
+        if(!p.denied) placeOff(gs,0,total,tithe);
+        else L('Your offering was denied','warn');
+        renderAll(gs);
+      });
+    });
+  } else {
+    if((p.offsThisTurn||0)>=2) {
+      openResponseWindow(gs,'moff',()=>{
+        if(!p.denied) placeOff(gs,0,total,tithe);
+        else L('Your offering was denied','warn');
+        renderAll(gs);
+      });
+      return;
+    }
+    placeOff(gs,0,total,tithe);
+    renderAll(gs);
+  }
+}
+
+function hPass() {
+  if(UI.awaitResp) {
+    L('You pass response','');
+    closeResponse();
+  } else if(GS.cur===0) {
+    endMyTurn(GS);
+  }
+}
+
+function endMyTurn(gs) {
+  const p=gs.P[0];
+  p.denied=false; p.offersLeft=1+p.bonus; p.bonus=0; p.vaultUsed=false; p.warded=false; p.offsThisTurn=0;
+  UI.sel=null;
+  enfLim(gs, 0, ()=>{
+    L('You end your turn',''); renderAll(gs);
+    if(!gs.over) advanceTurn(gs);
+  });
+}
+
+function advanceTurn(gs) {
+  if(gs.over) return;
+  gs.cur=(gs.cur+1)%gs.P.length;
+  if(gs.cur===0) { gs.turn++; L('— Turn '+gs.turn+' —','hi'); }
+  renderAll(gs);
+  if(gs.P[gs.cur].human) {
+    doHumanDraw(gs);
+  } else {
+    L(gs.P[gs.cur].name+' starts their turn','');
+    aiTurn(gs, gs.cur, ()=>{ if(!gs.over) advanceTurn(gs); });
+  }
+}
+
+
+function escHTML(v){
+  return String(v??'').replace(/[&<>'"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+}
+function readableCardHTML(card, opts={}){
+  const safe = card || {name:'Filled Offering',type:'tithe',desc:'This offering slot was filled by an effect and does not have a source card recorded.'};
+  const type=safe.type||'tithe';
+  const label=opts.label?'<div class="slot-label">'+escHTML(opts.label)+'</div>':'';
+  const click=opts.onclick?` onclick="${opts.onclick}"`:'';
+  const inert=opts.onclick?'':' inert';
+  const title=opts.onclick?' title="Choose this card"':' title="View card"';
+  return `<div class="choice-card ${type}${inert}"${click}${title}>${label}<div class="type">${escHTML(typeLabel(safe))}</div><div class="name">${escHTML(safe.name||'Filled Offering')}</div><div class="desc">${cardDescHTML(safe)}</div></div>`;
+}
+function openOfferingsViewer(pi){
+  const gs=GS; if(!gs||!gs.P[pi]) return;
+  const p=gs.P[pi];
+  if(!p.offeredCards) p.offeredCards=Array(15).fill(null);
+  const cards=[];
+  for(let i=0;i<15;i++){
+    if(p.offerings[i]) cards.push(readableCardHTML(p.offeredCards[i],{label:'Offering Slot '+(i+1)}));
+  }
+  const body=cards.length
+    ? '<div class="choice-card-grid">'+cards.join('')+'</div>'
+    : '<div style="color:var(--dim);font-size:.78rem;padding:10px;">No filled offering slots yet.</div>';
+  openModal(N(pi,gs)+' — Offered Cards',body,'',()=>closeModal());
+}
+
+// ─────────────────────────────────────────
+// MODALS
+// ─────────────────────────────────────────
+// Modal cancel callback stored globally — never serialised into onclick
+let _modalCancelCb = null;
+
+function openModal(title, body, btns, cancelCb, cancelText='Cancel') {
+  _modalCancelCb = cancelCb || null;
+  document.getElementById('mttl').textContent = title;
+  document.getElementById('mbdy').innerHTML   = body;
+  document.getElementById('mbtns').innerHTML  = btns +
+    (cancelText===null ? '' : '<button class="btn bgr" onclick="modalCancel()">'+escHTML(cancelText)+'</button>');
+  document.getElementById('mov').classList.add('open');
+}
+function modalCancel() {
+  if(_modalCancelCb) { const f=_modalCancelCb; _modalCancelCb=null; f(); }
+  else closeModal();
+}
+function closeModal() {
+  _modalCancelCb=null;
+  const mov=document.getElementById('mov');
+  if(mov) mov.classList.remove('open','rules-center','discard-selector');
+}
+
+function openRebirthModal(gs, src, cb) {
+  const opts = '<div class="choice-card-grid discard-pile-grid">'+gs.disc.map((c,i)=>
+    readableCardHTML(c,{label:'Discard #'+(i+1),onclick:'doRetBirth('+i+')'})
+  ).join('')+'</div>';
+  openModal('Return from Discard','<div style="margin-bottom:10px;color:var(--ow);">Choose a card to return to your hand:</div>'+opts,'',
+    ()=>{ if(cancelPendingPlayUndo(GS)) return; closeModal(); const c=GS._rebirthCb; GS._rebirthCb=null; if(c) c(); });
+  const mov=document.getElementById('mov');
+  if(mov) mov.classList.add('discard-selector');
+  // Store cb so doRetBirth can call it
+  GS._rebirthCb = cb;
+}
+// Tears of the Lament — pick 3 cards from discard to return to personal deck
+function showTearsModal(gs, src) {
+  if(!gs.disc.length){ L('Discard is empty',''); return; }
+  let chosen=[];
+  function render(){
+    const needed=3, rem=needed-chosen.length;
+    const btns=gs.disc.map((c,i)=>{
+      const sel=chosen.includes(i);
+      const col=c.type==='spell'?'var(--sc)':c.type==='trap'?'var(--tc)':'var(--mc)';
+      return readableCardHTML(c,{label:(sel?'SELECTED · ':'')+'Discard #'+(i+1),onclick:'toggleTearsDiscard('+i+')'});
+    }).join('');
+    const conf=chosen.length===needed
+      ?`<button class="btn bg" onclick="confirmTears()">Shuffle Into Deck</button>`
+      :`<button class="btn bgr" disabled style="opacity:.3">Choose ${rem} more</button>`;
+    openModal('Tears of the Lament','Choose 3 cards from the discard pile to shuffle into your personal deck:<div class="choice-card-grid">'+btns+'</div>',conf,()=>closeModal());
+    GS._tearsPick={chosen,render};
+  }
+  render();
+}
+function toggleTearsDiscard(i){
+  const s=GS._tearsPick; if(!s)return;
+  const p=s.chosen.indexOf(i);
+  if(p!==-1) s.chosen.splice(p,1);
+  else if(s.chosen.length<3) s.chosen.push(i);
+  s.render();
+}
+function confirmTears(){
+  closeModal();
+  const s=GS._tearsPick; if(!s)return;
+  const sorted=[...s.chosen].sort((a,b)=>b-a);
+  for(const i of sorted){
+    const c=GS.disc.splice(i,1)[0];
+    GS.P[0].pdeck.push(c);
+    L('Shuffled '+c.name+' into personal deck','hi');
+  }
+  shufflePdeck(GS,0);
+  GS._tearsPick=null;
+  renderAll(GS);
+}
+
+function showHeartLamentModal(gs, src) {
+  let chosen=[];
+  function render(){
+    const needed=3, rem=needed-chosen.length;
+    const btns=gs.disc.map((c,i)=>{
+      const sel=chosen.includes(i);
+      const col=c.type==='spell'?'var(--sc)':c.type==='trap'?'var(--tc)':'var(--mc)';
+      return readableCardHTML(c,{label:(sel?'SELECTED · ':'')+'Discard #'+(i+1),onclick:'toggleHeartDiscard('+i+')'});
+    }).join('');
+    const conf=chosen.length===needed
+      ?`<button class="btn bg" onclick="confirmHeartLament(${src})">Shuffle Into Deck</button>`
+      :`<button class="btn bgr" disabled style="opacity:.3">Choose ${rem} more</button>`;
+    openModal('Heart of the Lament','Choose 3 cards from discard to shuffle into your personal deck, then mill 1 from your personal deck.<div class="choice-card-grid">'+btns+'</div>',conf,()=>closeModal());
+    GS._heartPick={chosen,render,src};
+  }
+  render();
+}
+function toggleHeartDiscard(i){
+  const s=GS._heartPick; if(!s)return;
+  const p=s.chosen.indexOf(i);
+  if(p!==-1) s.chosen.splice(p,1);
+  else if(s.chosen.length<3) s.chosen.push(i);
+  s.render();
+}
+function confirmHeartLament(src){
+  closeModal();
+  const s=GS._heartPick; if(!s)return;
+  const sorted=[...s.chosen].sort((a,b)=>b-a);
+  let moved=0;
+  for(const i of sorted){
+    const c=GS.disc.splice(i,1)[0];
+    GS.P[src].pdeck.push(c);
+    moved++;
+    L('Heart of the Lament shuffles '+c.name+' into personal deck','hi');
+  }
+  if(moved===3){
+    shufflePdeck(GS,src);
+    millCards(GS,src,1,'personal');
+    GS.P[src].heartLamentUsed=true;
+  }
+  GS._heartPick=null;
+  renderAll(GS);
+}
+
+function doGlimpsePick(i) {
+  closeModal();
+  const top = GS._glimpseTop; const cb = GS._glimpseCb;
+  GS._glimpseTop = null; GS._glimpseCb = null;
+  if(!top) { if(cb) cb(); return; }
+  // Add chosen card to hand
+  GS.P[0].hand.push(top[i]);
+  L('You keep '+top[i].name,'hi');
+  // Put the rest back on top of deck in original order
+  const rest = top.filter((_,idx)=>idx!==i).reverse();
+  rest.forEach(c=>GS.deck.push(c));
+  L('Other cards return to the draw pile','');
+  renderAll(GS);
+  if(cb) cb(); else clearPendingPlayUndo(GS);
+}
+
+function doRetBirth(i) {
+  closeModal();
+  const c=GS.disc.splice(i,1)[0];
+  GS.P[0].hand.push(c);
+  L('You retrieve '+c.name,'hi');
+  const cb=GS._rebirthCb; GS._rebirthCb=null;
+  renderAll(GS);
+  if(cb) cb(); else clearPendingPlayUndo(GS);
+}
+
+// ─────────────────────────────────────────
+// TOOLTIP
+// ─────────────────────────────────────────
+function showTip(e, id) { showCardPopup(e, {id}); }
+
+function cardDescHTML(card) {
+  const def=DEF[card.id];
+  let desc=(def?.desc||'');
+  if(card.type==='tithe' && def?.blessingCost>0 && !desc.includes('[Cost]')) {
+    const rc=def.blessingCost;
+    desc='[Cost] Remove '+rc+' offering'+(rc>1?'s':'')+' to Blessing. '+desc;
+  }
+  return desc
+    .replace(/\[Req\]/gi,'<span style="color:var(--yr);font-weight:900">[Req]</span>')
+    .replace(/\[Cost\]/gi,'<span style="color:var(--yy);font-weight:900">[Cost]</span>')
+    .replace(/\[Effect\]/gi,'<span style="color:var(--yg);font-weight:900">[Effect]</span>')
+    .replace(/Blessing:/g,'<span style="color:var(--yo);font-weight:900">Blessing:</span>')
+    .replace(/Blessing:/g,'<span style="color:var(--yo);font-weight:900">Blessing:</span>');
+}
+
+function renderPopupCard(card) {
+  const popup=document.getElementById('card-popup');
+  const preview=popup?.querySelector('.pp-card');
+  if(!preview) return;
+  const typeClass=card.type==='spell'?'sc':card.type==='trap'?'tc':'mc';
+  const suit=card.type==='spell'?'♠':card.type==='trap'?'♣':'♦';
+  const isEldritch=card.id&&card.id.startsWith('M_ELD_');
+  preview.className='pp-card card '+typeClass+(isEldritch?' eldritch-card':'');
+  preview.dataset.suit=suit;
+  preview.innerHTML=
+    '<div class="ctype">'+typeLabel(card)+'</div>'+
+    '<div class="cname">'+card.name+'</div>'+
+    '<div class="cdesc">'+cardDescHTML(card)+'</div>';
+}
+
+function fillCardPopup(card) {
+  const def=DEF[card.id]; if(!def) return;
+  const popup=document.getElementById('card-popup');
+  if(!popup) return;
+  renderPopupCard(card);
+  popup.querySelector('.pp-type').textContent=typeLabel(card).toUpperCase();
+  popup.querySelector('.pp-name').textContent=card.name;
+  popup.querySelector('.pp-desc').innerHTML=cardDescHTML(card);
+  popup.querySelector('.pp-cost').textContent=
+    Object.keys(def.cost||{}).length ? 'Cost: '+costTxt(def.cost) : '';
+}
+
+function dismissResolvedPopup(card) {
+  const popup=document.getElementById('card-popup');
+  if(!popup||popup.style.display==='none'||!card?.uid) return;
+  if(popup.dataset.cardUid===card.uid) hideCardPopup();
+}
+
+function positionCardPopupByResolutionZone() {
+  const popup=document.getElementById('card-popup');
+  const rz=document.getElementById('rz-area');
+  if(!popup) return;
+  const margin=14;
+  const gap=16;
+  const rect=rz?.getBoundingClientRect?.() || {right:window.innerWidth/2, top:window.innerHeight/2-180, height:360};
+  const popupWidth=popup.offsetWidth || Math.min(360, window.innerWidth-24);
+  const popupHeight=popup.offsetHeight || 420;
+  // Prefer the right side of the Resolution Zone. If there is not enough room,
+  // clamp to the viewport's right edge instead of centering over the table.
+  let x=rect.right+gap;
+  if(x+popupWidth>window.innerWidth-margin) x=Math.max(margin, window.innerWidth-popupWidth-margin);
+  let y=rect.top+(rect.height/2)-(popupHeight/2);
+  if(y<margin) y=margin;
+  if(y+popupHeight>window.innerHeight-margin) y=Math.max(margin, window.innerHeight-popupHeight-margin);
+  popup.style.left=x+'px';
+  popup.style.top=y+'px';
+  popup.style.transform='none';
+}
+
+function showCardPopupById(card) {
+  const popup=document.getElementById('card-popup');
+  if(!popup) return;
+  fillCardPopup(card);
+  popup.dataset.cardUid=card?.uid||'';
+  popup.dataset.popupMode='pinned';
+  popup.dataset.openedAt=String(Date.now());
+  popup.style.display='block';
+  popup.style.pointerEvents='auto';
+  popup.style.cursor='default';
+  popup.onclick=e=>e.stopPropagation();
+  positionCardPopupByResolutionZone();
+}
+function hideTip() { hideCardPopup(); }
+
+function showCardPopup(e, card) {
+  const popup=document.getElementById('card-popup');
+  if(!popup) return;
+  fillCardPopup(card);
+  popup.dataset.cardUid='';
+  popup.dataset.popupMode='hover';
+  popup.style.display='block';
+  popup.style.pointerEvents='none';
+  popup.style.cursor='';
+  popup.onclick=null;
+  positionCardPopupByResolutionZone();
+}
+function hideCardPopup() {
+  const popup=document.getElementById('card-popup');
+  if(popup) {
+    popup.style.display='none';
+    popup.style.pointerEvents='none';
+    popup.style.cursor='';
+    popup.onclick=null;
+    popup.style.transform='';
+    popup.dataset.cardUid='';
+    popup.dataset.popupMode='';
+    popup.dataset.openedAt='';
+  }
+}
+
+document.addEventListener('pointerdown', e=>{
+  const popup=document.getElementById('card-popup');
+  if(!popup || popup.style.display==='none' || popup.dataset.popupMode!=='pinned') return;
+  // Prevent the same click that opened the popup from also closing it.
+  if(Date.now() - Number(popup.dataset.openedAt || 0) < 80) return;
+  if(!popup.contains(e.target)) hideCardPopup();
+});
+
+function hideTip() { if(!('ontouchstart' in window)) document.getElementById('tip').style.display='none'; }
+
+// ─────────────────────────────────────────
+// CARD DETAIL PANEL (mobile)
+// ─────────────────────────────────────────
+function showCardDetail(card) {
+  const def=DEF[card.id]; if(!def) return;
+  const suit=card.type==='spell'?'♠':card.type==='trap'?'♣':'♥';
+  const col=card.type==='spell'?'var(--sc)':card.type==='trap'?'var(--tc)':'var(--mc)';
+  const icon=document.getElementById('cd-icon');
+  icon.style.boxShadow='0 0 0 2px var(--navy),0 0 0 4px '+col+',3px 3px 0 rgba(0,0,0,.6),0 0 12px '+col;
+  icon.innerHTML=
+    '<div style="font-size:1.2rem;color:'+col+';text-shadow:0 0 6px '+col+'">'+suit+'</div>'+
+    '<div style="font-family:var(--fui);font-size:.65rem;color:var(--navy);text-align:center;line-height:1.1;margin-top:2px;">'+card.name+'</div>';
+  document.getElementById('cd-type').textContent=typeLabel(card).toUpperCase();
+  document.getElementById('cd-name').textContent=card.name;
+  document.getElementById('cd-desc').textContent=def.desc||'';
+  document.getElementById('cd-cost').textContent=
+    Object.keys(def.cost||{}).length ? 'COST: '+costTxt(def.cost) : 'FREE';
+  document.getElementById('card-detail').classList.add('show');
+}
+function closeCardDetail() {
+  document.getElementById('card-detail').classList.remove('show');
+}
+// Close card detail on tap outside
+document.addEventListener('touchstart', e=>{
+  const cd=document.getElementById('card-detail');
+  if(cd.classList.contains('show') && !cd.contains(e.target)) closeCardDetail();
+}, {passive:true});
+
+// ─────────────────────────────────────────
+// LOG
+// ─────────────────────────────────────────
+const LOGS=[];
+function cleanLogMessage(msg) {
+  msg = String(msg ?? '').replace(/\s+/g,' ').trim();
+  msg = msg
+    .replace(/\bYou draws\b/g,'You draw')
+    .replace(/\bYou drew\b/g,'You drew')
+    .replace(/\bYou loses\b/g,'You lose')
+    .replace(/\bYou fills\b/g,'You fill')
+    .replace(/\bYou discards\b/g,'You discard')
+    .replace(/\bYou gains\b/g,'You gain')
+    .replace(/\bYou places\b/g,'You place')
+    .replace(/\bYou sets\b/g,'You set')
+    .replace(/\bYou collects\b/g,'You collect')
+    .replace(/\bYou steals\b/g,'You steal')
+    .replace(/\bYou blatantly steals\b/g,'You blatantly steal')
+    .replace(/\bYou gives\b/g,'You give')
+    .replace(/\bYou uses\b/g,'You use')
+    .replace(/\bYou mills\b/g,'You mill')
+    .replace(/\bYou retrieves\b/g,'You retrieve')
+    .replace(/\bYou activates\b/g,'You activate')
+    .replace(/\bYou negates\b/g,'You negate')
+    .replace(/\bYou mirrors\b/g,'You mirror')
+    .replace(/\bYou summons\b/g,'You summon')
+    .replace(/\bYou spies\b/g,'You spy')
+    .replace(/\bYou offers\b/g,'You offer')
+    .replace(/\bYou denies\b/g,'You deny')
+    .replace(/\bYou destroys\b/g,'You destroy')
+    .replace(/\bYou reveals\b/g,'You reveal')
+    .replace(/\bYou shuffles\b/g,'You shuffle')
+    .replace(/\bYou keeps\b/g,'You keep')
+    .replace(/\bYou has\b/g,'You have')
+    .replace(/\bYou is\b/g,'You are')
+    .replace(/\bYou was\b/g,'You were')
+    .replace(/\bYou's\b/g,'your')
+    .replace(/\bthis same turn\b/g,'this turn')
+    .replace(/\boffering denied\b/g,'offering was denied')
+    .replace(/\[Req\]/g,'Requirement')
+    .replace(/\bcard\(s\)\b/g,'cards')
+    .replace(/\boffering\(s\)\b/g,'offerings')
+    .replace(/\bslot\(s\)\b/g,'slots');
+  if(msg && !/[.!?—]$/.test(msg)) msg += '.';
+  return msg;
+}
+function L(msg, type='') {
+  msg = cleanLogMessage(msg);
+  LOGS.unshift({msg,type}); if(LOGS.length>60) LOGS.pop();
+  const a=document.getElementById('log'); if(!a) return;
+  a.innerHTML=LOGS.map(l=>`<div class="ll ${l.type||''}">${escHTML(l.msg)}</div>`).join('');
+}
+
+// ─────────────────────────────────────────
+// WIN
+// ─────────────────────────────────────────
+function showWin(pi, gs) {
+  document.getElementById('win-sub').textContent =
+    gs.P[pi].name+' completes the Rite of Offerings on Turn '+gs.turn+'.';
+  const sw=document.getElementById('s-win'); if(sw) sw.classList.add('show');
+}
+
+// ═════════════════════════════════════════
+// DRAFT PHASE ENGINE
+// Round-robin: all 4 players draw 10 cards simultaneously
+// Pick 2, pass 8 → pick 2 from 8, pass 6 → ... until each hand is 0
+// Two full rounds = 20 card personal deck per player
+// Pass direction: clockwise R1, counter-clockwise R2
+// Visibility: only you + the person receiving see a hand
+// ═════════════════════════════════════════
+
+const DRAFT = {
+  active: false,
+  round: 1,       // 1 or 2
+  pass: 1,        // 1..5 (hand sizes: 10,8,6,4,2)
+  // Each player's current hand being drafted (array of cards)
+  hands: [],
+  // Cards each player has picked so far
+  decks: [],
+  // How many picks remain for each player this pass (starts at 2)
+  picksLeft: [],
+  // Whether each player has finished picking this pass
+  passed: [],
+  PICKS_PER_PASS: 2,
+  CARDS_PER_ROUND: 10,
+  PASSES_PER_ROUND: 5,  // CARDS_PER_ROUND / PICKS_PER_PASS
+  ROUNDS: 2,
+  GOAL: 20,       // cards per personal deck
+};
+
+function startDraft(gs) {
+  DRAFT.active = true;
+  DRAFT.round = 1;
+  DRAFT.pass = 1;
+  DRAFT.PASSES_PER_ROUND = Math.ceil(DRAFT.CARDS_PER_ROUND / DRAFT.PICKS_PER_PASS);
+  DRAFT.GOAL = DRAFT.CARDS_PER_ROUND * DRAFT.ROUNDS;
+  DRAFT.hands = gs.P.map(()=>[]);
+  DRAFT.decks = gs.P.map(()=>[]);
+  DRAFT.picksLeft = gs.P.map(()=>DRAFT.PICKS_PER_PASS);
+  DRAFT.passed = gs.P.map(()=>false);
+  const dsc=document.getElementById('draft-screen'); if(dsc) dsc.classList.add('active');
+  dealDraftHands(gs);
+}
+
+function dealDraftHands(gs) {
+  // All players draw a fresh draft hand simultaneously from the shared deck
+  for(let pi=0; pi<gs.P.length; pi++) {
+    DRAFT.hands[pi] = [];
+    DRAFT.picksLeft[pi] = DRAFT.PICKS_PER_PASS;
+    DRAFT.passed[pi] = false;
+    for(let i=0; i<DRAFT.CARDS_PER_ROUND; i++) {
+      if(!gs.deck.length) { gs.deck=shuf([...gs.disc]); gs.disc=[]; }
+      if(gs.deck.length) DRAFT.hands[pi].push(gs.deck.pop());
+    }
+  }
+  renderDraftHand(gs);
+  // AI players pick immediately
+  setTimeout(()=>aiDraftPick(gs), 400);
+}
+
+function renderDraftHand(gs) {
+  const p0hand = DRAFT.hands[0];
+  const deck0  = DRAFT.decks[0];
+  const picks0 = DRAFT.picksLeft[0];
+  const handSize = p0hand.length;
+
+  document.getElementById('draft-status').textContent =
+    'Round '+DRAFT.round+' · Pass '+DRAFT.pass+' of '+DRAFT.PASSES_PER_ROUND;
+  document.getElementById('draft-progress').textContent =
+    'Your deck: '+deck0.length+' / '+DRAFT.GOAL+' cards';
+  document.getElementById('draft-deck-preview').textContent =
+    picks0>0
+      ? 'Pick '+picks0+' more card'+(picks0>1?'s':'')+' from this hand ('+handSize+' shown).'
+      : 'Done picking — pass the remaining '+handSize+' cards.';
+
+  const passbtn = document.getElementById('draft-pass-btn');
+  passbtn.disabled = picks0 > 0;
+  passbtn.textContent = DRAFT.passed[0] ? 'Waiting...' : 'Pass Hand ▶';
+
+  const waiting = document.getElementById('draft-waiting');
+  waiting.style.display = DRAFT.passed[0] ? 'block' : 'none';
+
+  const handEl = document.getElementById('draft-hand');
+  handEl.innerHTML = '';
+  handEl.style.setProperty('--draft-cols', Math.max(1, Math.ceil(p0hand.length / 2)));
+
+  p0hand.forEach((card, idx) => {
+    const def = DEF[card.id];
+    const suit = card.type==='spell'?'♠':card.type==='trap'?'♣':'♦';
+    const col  = card.type==='spell'?'var(--sc)':card.type==='trap'?'var(--tc)':'var(--mc)';
+    const typeClass = card.type==='spell'?'sc':card.type==='trap'?'tc':'mc';
+    const alreadyPicked = !p0hand.includes(card); // won't happen mid-render
+    const canPick = picks0 > 0;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'draft-card-wrap';
+
+    // Card face
+    const cardEl = document.createElement('div');
+    cardEl.className = 'card '+typeClass;
+    cardEl.dataset.suit = suit;
+    cardEl.innerHTML =
+      '<div class="ctype">'+typeLabel(card)+'</div>'+
+      '<div class="cname">'+card.name+'</div>'+
+      (def?.cost&&Object.keys(def.cost).length?'<div class="ccost">'+costTxt(def.cost,card)+'</div>':'')+
+      '<div class="cdesc">'+cardDescHTML(card)+'</div>';
+    cardEl.title = 'Click to enlarge';
+    cardEl.addEventListener('mouseenter', e=>showCardPopup(e, card));
+    cardEl.addEventListener('mouseleave', hideCardPopup);
+    cardEl.addEventListener('click', e=>{ e.stopPropagation(); showCardPopupById(card); });
+    wrap.appendChild(cardEl);
+
+    // Pick button
+    const btn = document.createElement('button');
+    btn.className = 'draft-pick-btn';
+    btn.textContent = 'Pick';
+    btn.disabled = !canPick;
+    btn.addEventListener('click', ()=>humanDraftPick(idx));
+    wrap.appendChild(btn);
+
+    handEl.appendChild(wrap);
+  });
+}
+
+function humanDraftPick(idx) {
+  if(DRAFT.picksLeft[0] <= 0) return;
+  const card = DRAFT.hands[0].splice(idx, 1)[0];
+  DRAFT.decks[0].push(card);
+  DRAFT.picksLeft[0]--;
+  L('You draft: '+card.name, 'good');
+  // Auto-pass once all picks used
+  if(DRAFT.picksLeft[0] <= 0) {
+    DRAFT.passed[0] = true;
+    renderDraftHand(GS);
+    setTimeout(()=>checkAllPassed(GS), 300);
+  } else {
+    renderDraftHand(GS);
+  }
+}
+
+function draftPassHand() {
+  if(DRAFT.picksLeft[0] > 0) return;
+  DRAFT.passed[0] = true;
+  renderDraftHand(GS);
+  checkAllPassed(GS);
+}
+
+function aiDraftPick(gs) {
+  // AI players pick their 2 cards based on simple priority
+  for(let pi=1; pi<gs.P.length; pi++) {
+    if(DRAFT.passed[pi]) continue;
+    const hand = DRAFT.hands[pi];
+    while(DRAFT.picksLeft[pi] > 0 && hand.length > 0) {
+      // Priority: effect tithes > spells with cost > traps > free spells > basic tithes
+      let best = -1, bestScore = -1;
+      hand.forEach((c,i)=>{
+        let score = 0;
+        if(c.type==='tithe'){
+          const rc=DEF[c.id]?.blessingCost||0;
+          if(rc>0) score=90-rc*10; // higher blessing cost = better effect
+          else if(DEF[c.id]?.onOffer) score=60;
+          else if(DEF[c.id]?.onDiscard) score=50;
+          else score=20;
+        } else if(c.type==='spell') {
+          score = Object.keys(DEF[c.id]?.cost||{}).length>0?70:45;
+        } else if(c.type==='trap') {
+          score=65;
+        }
+        if(score>bestScore){bestScore=score;best=i;}
+      });
+      if(best>=0){
+        const card=hand.splice(best,1)[0];
+        DRAFT.decks[pi].push(card);
+        DRAFT.picksLeft[pi]--;
+      }
+    }
+    DRAFT.passed[pi] = true;
+  }
+  checkAllPassed(gs);
+}
+
+function checkAllPassed(gs) {
+  // Wait for all players to pass
+  if(!DRAFT.passed.every(p=>p)) return;
+
+  // Advance pass
+  DRAFT.pass++;
+  // Determine pass direction: R1=clockwise(+1), R2=counter-clockwise(-1)
+  const dir = DRAFT.round===1 ? 1 : -1;
+
+  // Rotate hands
+  const playerCount = gs.P.length;
+  const oldHands = DRAFT.hands.map(h=>[...h]);
+  for(let pi=0;pi<playerCount;pi++){
+    const from = ((pi - dir) + playerCount) % playerCount;
+    DRAFT.hands[pi] = oldHands[from];
+  }
+
+  // Reset picks and passed flags
+  for(let pi=0;pi<playerCount;pi++){
+    DRAFT.picksLeft[pi] = DRAFT.PICKS_PER_PASS;
+    DRAFT.passed[pi] = false;
+  }
+
+  if(DRAFT.pass > DRAFT.PASSES_PER_ROUND) {
+    // Round complete
+    DRAFT.round++;
+    if(DRAFT.round > DRAFT.ROUNDS) {
+      // Draft done
+      finishDraft(gs);
+      return;
+    }
+    // Deal new hands for round 2
+    DRAFT.pass = 1;
+    dealDraftHands(gs);
+    return;
+  }
+
+  renderDraftHand(gs);
+  // AI picks immediately for new pass
+  setTimeout(()=>aiDraftPick(gs), 300);
+}
+
+function finishDraft(gs) {
+  DRAFT.active = false;
+  const ds=document.getElementById('draft-screen'); if(ds) ds.classList.remove('active');
+  // Preserve a full drafted-card snapshot for review, then shuffle a separate personal deck pile for play.
+  for(let pi=0;pi<gs.P.length;pi++){
+    const drafted = [...DRAFT.decks[pi]];
+    gs.P[pi].draftedCards = drafted;
+    gs.P[pi].pdeck = shuf([...drafted]);
+    gs.P[pi].hand = [];
+  }
+  gs._gameStarted=false;
+  renderAll(gs);
+  showDraftedDeckViewer(true);
+}
+
+// ─────────────────────────────────────────
+// NEW GAME / RESTART
+// ─────────────────────────────────────────
+function hasSeenRulesTutorial() {
+  try { return localStorage.getItem(TUTORIAL_SEEN_KEY)==='1'; }
+  catch(e) { return false; }
+}
+
+function markRulesTutorialSeen() {
+  try { localStorage.setItem(TUTORIAL_SEEN_KEY,'1'); }
+  catch(e) {}
+}
+
+function rulesTutorialHTML(firstPlay=false) {
+  return ''+
+    '<div class="tutorial-rules">'+
+      '<div class="rule-card"><b>Goal</b><ul>'+
+        '<li>Be the first player to fill 15 Offering slots.</li>'+
+        '<li>You can also win with Soul of the Eldritch if you hold the full Eldritch set and place it as a Blessing.</li>'+
+      '</ul></div>'+
+      '<div class="rule-card"><b>Draft first</b><ul>'+
+        '<li>Each player drafts '+DRAFT.GOAL+' cards into a personal deck.</li>'+
+        '<li>During play, you may draw from the public deck or your personal deck during your draw phase.</li>'+
+      '</ul></div>'+
+      '<div class="rule-card"><b>Your turn</b><ul>'+
+        '<li>Draw, then play cards, set Traps, make Offerings, or place a Tribute as your Blessing.</li>'+
+        '<li>Offering a Tribute fills a slot. Some cards grant extra Offering actions or extra slots for the turn.</li>'+
+        '<li>Your hand limit is 9 unless a Blessing changes it.</li>'+
+      '</ul></div>'+
+      '<div class="rule-card"><b>Cards</b><ul>'+
+        '<li><span style="color:var(--sc)">Spells</span> are played from hand for immediate effects.</li>'+
+        '<li><span style="color:var(--tc)">Traps</span> are set face-down, then used as responses after they become live.</li>'+
+        '<li><span style="color:var(--mc)">Tributes</span> can be offered or placed in your Blessing zone for passive effects.</li>'+
+      '</ul></div>'+
+      '<div class="rule-card"><b>Responses and chain</b><ul>'+
+        '<li>Cards go to the Resolution Zone and resolve from newest to oldest.</li>'+
+        '<li>When the red TARGETED warning appears, an opponent is aiming an effect at you.</li>'+
+        '<li>Negates mark cards in the chain; negated cards go to discard without resolving.</li>'+
+      '</ul></div>'+
+      '<div class="tipline">Tip: click discard, Blessings, opponent panels, and your drafted deck for extra card information. Use the Rules button any time to reopen this screen.</div>'+
+    '</div>';
+}
+
+function showRulesTutorial(firstPlay=false) {
+  const buttons = firstPlay
+    ? '<button class="btn bg" onclick="finishFirstPlayTutorial()">Got It — Setup Game</button>'
+    : '<button class="btn bg" onclick="closeModal()">Close</button>';
+  openModal(firstPlay ? 'HOW TO PLAY — FIRST RITE' : 'HOW TO PLAY', rulesTutorialHTML(firstPlay), buttons, null, null);
+  const mov=document.getElementById('mov');
+  if(mov) mov.classList.add('rules-center');
+}
+
+function finishFirstPlayTutorial() {
+  markRulesTutorialSeen();
+  closeModal();
+  showGameSetup();
+}
+
+function setupOptionsHTML(selected=GAME_OPTIONS.totalPlayers) {
+  let opts='';
+  for(let total=MIN_TOTAL_PLAYERS; total<=MAX_TOTAL_PLAYERS; total++) {
+    const opp=total-1;
+    opts += '<option value="'+total+'" '+(total===selected?'selected':'')+'>'+total+' players'+(total===DEFAULT_TOTAL_PLAYERS?' (Reccomended)':'')+' · '+opp+' opponent'+(opp!==1?'s':'')+'</option>';
+  }
+  return opts;
+}
+
+function showGameSetup() {
+  const selected = clampTotalPlayers(GAME_OPTIONS.totalPlayers);
+  const body =
+    '<div style="color:var(--ow);line-height:1.5;margin-bottom:8px;">Choose how many total players will join the Rite. The card pool scales from the original 4-player deck so larger games have a bigger public deck after draft.</div>'+
+    '<select id="setup-player-count" class="setup-select">'+setupOptionsHTML(selected)+'</select>'+
+    '<div style="color:var(--dim);font-size:.68rem;line-height:1.45;">Supports 2 to 9 total players. Each player still drafts '+DRAFT.GOAL+' personal-deck cards.</div>';
+  openModal('GAME SETUP', body, '<button class="btn bg" onclick="startConfiguredGame()">Start Draft</button>', null, null);
+}
+
+function startConfiguredGame(totalPlayers=null) {
+  const sel=document.getElementById('setup-player-count');
+  const count=clampTotalPlayers(totalPlayers ?? (sel ? sel.value : GAME_OPTIONS.totalPlayers));
+  GAME_OPTIONS.totalPlayers=count;
+  UI.sel=null; UI.awaitResp=false; UI.respDone=null; UI.respTrig=null;
+  const swn=document.getElementById('s-win'); if(swn) swn.classList.remove('show');
+  closeModal();
+  UID=0;
+  LOGS.length=0;
+  const logEl=document.getElementById('log'); if(logEl) logEl.innerHTML='';
+  GS=initGS(count);
+  renderAll(GS);
+  L('Starting '+count+'-player game with '+(count-1)+' opponent'+(count!==2?'s':'')+'. Deck scaled to '+GS.deck.length+' cards.','hi');
+  startDraft(GS);
+}
+
+function confirmRestart() {
+  openModal(
+    'RESTART GAME',
+    'Abandon the current Rite and start a new one?',
+    '<button class="btn yr bb" onclick="closeModal();showGameSetup()">Yes, Restart</button>',
+    ()=>closeModal()
+  );
+}
+
+function newGame() {
+  showGameSetup();
+}
+
+
+window.addEventListener('load', ()=>{
+  GS = initGS(GAME_OPTIONS.totalPlayers);
+  renderAll(GS);
+  if(hasSeenRulesTutorial()) showGameSetup();
+  else showRulesTutorial(true);
+});
+
+</script>
+</body>
+</html>
