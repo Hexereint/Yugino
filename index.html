@@ -69,6 +69,14 @@ body{font-family:var(--fui);font-weight:700;color:var(--wh);}
   background:var(--navy);color:var(--ow);font-family:var(--fui);font-weight:900;
   font-size:.9rem;text-transform:uppercase;
 }
+.setup-toggle{
+  display:flex;gap:10px;align-items:flex-start;margin:10px 0 12px;padding:10px 12px;
+  border:2px solid rgba(0,255,127,.28);background:rgba(0,255,127,.06);
+  box-shadow:3px 3px 0 rgba(0,0,0,.35);cursor:pointer;
+}
+.setup-toggle input{width:18px;height:18px;flex-shrink:0;margin-top:2px;accent-color:#00ff7f;}
+.setup-toggle b{display:block;color:var(--yg);font-size:.76rem;letter-spacing:.7px;text-transform:uppercase;}
+.setup-toggle small{display:block;color:var(--ow);font-size:.64rem;line-height:1.35;margin-top:3px;font-weight:800;}
 .tutorial-rules{
   display:grid;gap:10px;color:var(--ow);line-height:1.45;
 }
@@ -1058,7 +1066,7 @@ body{font-family:var(--fui);font-weight:700;color:var(--wh);}
       </div>
       <!-- Draw phase choice -->
       <div id="draw-choice">
-        <div class="sidebar-label">Draw from:</div>
+        <div class="sidebar-label" id="draw-choice-label">Draw from:</div>
         <button class="draw-btn draw-pub" onclick="hDrawFrom('public')">Public Deck</button>
         <button class="draw-btn draw-per" id="btn-draw-personal" onclick="hDrawFrom('personal')">Personal Deck</button>
       </div>
@@ -1583,7 +1591,8 @@ const BASE_TOTAL_PLAYERS = 4;
 const MIN_TOTAL_PLAYERS = 2;
 const MAX_TOTAL_PLAYERS = 9;
 const DEFAULT_TOTAL_PLAYERS = 4;
-const GAME_OPTIONS = { totalPlayers: DEFAULT_TOTAL_PLAYERS };
+const CATCH_UP_THRESHOLD = 10;
+const GAME_OPTIONS = { totalPlayers: DEFAULT_TOTAL_PLAYERS, catchUpMode: true };
 const TUTORIAL_SEEN_KEY = 'rite_of_offerings_rules_tutorial_seen_v1';
 const OPPONENT_NAMES = ['Seraph','Morvaine','Duskrel','Nyxara','Veyr','Orrin','Sable','Thorn','Mire'];
 const clampTotalPlayers = n => Math.max(MIN_TOTAL_PLAYERS, Math.min(MAX_TOTAL_PLAYERS, parseInt(n,10)||DEFAULT_TOTAL_PLAYERS));
@@ -1640,13 +1649,14 @@ const buildPlayers = totalPlayers => {
   return players;
 };
 
-const initGS = (totalPlayers=GAME_OPTIONS.totalPlayers) => {
+const initGS = (totalPlayers=GAME_OPTIONS.totalPlayers, catchUpMode=GAME_OPTIONS.catchUpMode) => {
   const players = buildPlayers(totalPlayers);
   return {
     P: players,
     deck: buildDeck(players.length), disc: [], rz: [],
     cur: 0, turn: 1, over: false,
     totalPlayers: players.length,
+    catchUpMode: catchUpMode !== false,
   };
 };
 
@@ -1661,6 +1671,11 @@ const typeLabel = cardOrType => {
 const cardTargetsOfferingEffect = card => ['S_DCOL','S_STEAL','S_MRUIN','S_MUTUAL'].includes(card?.id);
 const actionTriggerForCard = card => cardTargetsOfferingEffect(card) ? 'toff' : 'any';
 const stripTags = html => String(html||'').replace(/<[^>]*>/g,'');
+const catchUpModeEnabled = gs => gs?.catchUpMode !== false;
+const playerAtCatchUpLine = (gs, pi) => !!gs?.P?.[pi] && OC(gs.P[pi]) >= CATCH_UP_THRESHOLD;
+const anyOtherPlayerAtCatchUpLine = (gs, pi) => !!gs?.P?.some((p,i)=>i!==pi && OC(p) >= CATCH_UP_THRESHOLD);
+const playerGetsCatchUpDraw = (gs, pi) => catchUpModeEnabled(gs) && !!gs?.P?.[pi] && OC(gs.P[pi]) < CATCH_UP_THRESHOLD && anyOtherPlayerAtCatchUpLine(gs, pi);
+const drawPhaseDrawCount = (gs, pi) => playerGetsCatchUpDraw(gs, pi) ? 3 : 2;
 
 function markRZNegated(gs, entry, slotIndex, by=null) {
   if(!gs || !entry || !entry.card) return false;
@@ -1710,6 +1725,7 @@ function enfLim(gs, pi, cb) {
 
 function placeOff(gs, pi, n=1, sourceCard=null) {
   const p=gs.P[pi]; let placed=0;
+  const beforeCount=OC(p);
   if(!p.offeredCards) p.offeredCards=Array(15).fill(null);
   for(let c=0;c<n;c++) {
     const s=NS(p); if(s===-1) break;
@@ -1722,7 +1738,13 @@ function placeOff(gs, pi, n=1, sourceCard=null) {
       if(oi!==pi && op.blessing?.id==='M_SIPH') drw(gs,oi,1);
     });
   }
-  if(placed) L(N(pi,gs)+' fills '+placed+' offering slot'+(placed!==1?'s':'')+' ['+OC(p)+'/15]','good');
+  if(placed) {
+    const afterCount=OC(p);
+    L(N(pi,gs)+' fills '+placed+' offering slot'+(placed!==1?'s':'')+' ['+afterCount+'/15]','good');
+    if(catchUpModeEnabled(gs) && beforeCount<CATCH_UP_THRESHOLD && afterCount>=CATCH_UP_THRESHOLD) {
+      L('Catch-Up is active: players below '+CATCH_UP_THRESHOLD+' offerings draw 3 cards during their draw phase while another player is at '+CATCH_UP_THRESHOLD+'+ offerings.','hi');
+    }
+  }
   if(OC(p)>=15){gs.over=true;showWin(pi,gs);}
   return placed;
 }
@@ -1743,6 +1765,7 @@ function clrTraps(gs, pi) {
 
 function rmOff(gs, pi, n=1) {
   const p=gs.P[pi];
+  const beforeCount=OC(p);
   if(p.warded){L(N(pi,gs)+' is warded — removal blocked','hi');return;}
   if(p.blessing?.id==='M_SENT'){L(N(pi,gs)+"'s Stone Sentinel prevents offering removal",'hi');return;}
   if(p.blessing?.id==='M_VAULT' && !p.vaultUsed){
@@ -1751,7 +1774,13 @@ function rmOff(gs, pi, n=1) {
   }
   let rem=0;
   for(let c=0;c<n;c++) for(let i=0;i<15;i++) if(p.offerings[i]){p.offerings[i]=false;if(p.offeredCards)p.offeredCards[i]=null;rem++;break;}
-  if(rem) L(N(pi,gs)+' loses '+rem+' offering'+(rem!==1?'s':'')+' ['+OC(p)+'/15]','warn');
+  if(rem) {
+    const afterCount=OC(p);
+    L(N(pi,gs)+' loses '+rem+' offering'+(rem!==1?'s':'')+' ['+afterCount+'/15]','warn');
+    if(catchUpModeEnabled(gs) && beforeCount>=CATCH_UP_THRESHOLD && afterCount<CATCH_UP_THRESHOLD && anyOtherPlayerAtCatchUpLine(gs,pi)) {
+      L(N(pi,gs)+' is below '+CATCH_UP_THRESHOLD+' again; Catch-Up draw is restored while another player remains at '+CATCH_UP_THRESHOLD+'+.','hi');
+    }
+  }
 }
 
 function stlOff(gs, src, tgt) {
@@ -1921,9 +1950,12 @@ function aiUseBlessingAbility(gs, pi, cb=null) {
   }
   if(p.blessing?.id==='M_DCOLLECT' && !p.debtCollectorUsed) return useDebtCollector(gs,pi,done);
   if(p.blessing?.id==='M_THFCAT' && !p.thievingCatUsed) {
-    let tgt=null,best=-1;
-    gs.P.forEach((op,oi)=>{ if(oi!==pi && op.hand.length>best){best=op.hand.length;tgt=oi;} });
-    if(tgt!=null && best>0) return useThievingCat(gs,pi,tgt,done);
+    let tgt=aiClosestToWin(gs,pi);
+    if(tgt==null || !gs.P[tgt]?.hand?.length){
+      let best=-1;
+      gs.P.forEach((op,oi)=>{ if(oi!==pi && op.hand.length>best){best=op.hand.length;tgt=oi;} });
+    }
+    if(tgt!=null && gs.P[tgt]?.hand?.length>0) return useThievingCat(gs,pi,tgt,done);
   }
   if(done) done(false);
   return false;
@@ -2602,7 +2634,9 @@ function hDrawFrom(src) {
     gs.phase='main';
     renderAll(gs);
   } else {
-    renderAll(gs); // still need 1 more draw
+    const lbl=document.getElementById('draw-choice-label');
+    if(lbl) lbl.textContent='Draw '+gs._drawsLeft+' left:';
+    renderAll(gs); // still need more draws
   }
 }
 
@@ -2965,9 +2999,8 @@ function activateSetTrap(slotIdx) {
 // AI
 // ─────────────────────────────────────────
 function bestTgt(gs, src) {
-  let b=-1, bn=-1;
-  gs.P.forEach((p,i)=>{ if(i!==src && OC(p)>bn){bn=OC(p);b=i;} });
-  return b===-1 ? null : b;
+  // Target the opponent closest to completing the Rite.
+  return aiClosestToWin(gs, src);
 }
 
 function bestTrapTgt(gs, src) {
@@ -3029,14 +3062,35 @@ function aiCanWinByOffering(gs, pi) {
   return !p.denied && p.offersLeft>0 && aiBestOfferIndex(gs,pi)!==-1 && aiProjectedOfferCount(gs,pi)>=15;
 }
 
-function aiThreatLeader(gs, src) {
-  let b=null, best=-1;
+function aiThreatScore(gs, pi) {
+  const p=gs?.P?.[pi];
+  if(!p) return -Infinity;
+  const current=OC(p);
+  const bestGain=aiBestOfferGain(gs,pi);
+  const projected=current+bestGain;
+  let score=current*100 + Math.min(bestGain,4)*28 + Math.min(p.hand?.length||0,9)*3;
+  if(projected>=15) score+=700;
+  else if(current>=14) score+=520;
+  else if(current>=13) score+=380;
+  else if(current>=12) score+=240;
+  else if(current>=10) score+=110;
+  if(p.blessing?.id==='M_GRAVE') score+=40;
+  if(p.blessing?.id==='M_SENT' || p.warded) score+=25;
+  return score;
+}
+
+function aiClosestToWin(gs, src) {
+  let b=null, best=-Infinity;
   gs.P.forEach((p,i)=>{
     if(i===src) return;
-    const score=OC(p)*10 + aiBestOfferGain(gs,i);
+    const score=aiThreatScore(gs,i);
     if(score>best){best=score;b=i;}
   });
   return b;
+}
+
+function aiThreatLeader(gs, src) {
+  return aiClosestToWin(gs, src);
 }
 
 function aiShouldPlayBlessing(gs, pi, card) {
@@ -3056,6 +3110,133 @@ function aiShouldPlayBlessing(gs, pi, card) {
 
 function aiSpellAdvancesWin(card) {
   return ['S_TITHE','S_GRAVE','S_HOLLOW','S_SAC','S_DRAW2','S_RJUG','S_DRAW1','S_VASE','S_SCROUNGE','S_TAKEB'].includes(card?.id);
+}
+
+function aiHasTitheToOffer(gs, pi) {
+  return gs.P[pi].hand.some(c=>c.type==='tithe' && !(c.id==='M_ELD_SOUL' && DEF.M_ELD_SOUL.blessingReq?.(gs,pi)));
+}
+
+function aiUsefulDiscardCard(gs) {
+  return gs.disc.some(c=>c.type==='tithe' || DEF[c.id]?.onOffer || ['S_TITHE','S_GRAVE','S_WARD','S_HOLLOW','S_DRAW2','S_RJUG'].includes(c.id));
+}
+
+function aiSelfSpellScore(gs, pi, card) {
+  if(!card || !canPay(gs,pi,card,pi)) return -Infinity;
+  const p=gs.P[pi];
+  const oc=OC(p);
+  const need=15-oc;
+  const hasTithe=aiHasTitheToOffer(gs,pi);
+  const handLow=p.hand.length<=3;
+  let score=0;
+
+  switch(card.id){
+    case 'S_WARD':
+      score = oc>=12 ? 520 : oc>=10 ? 310 : 70;
+      if(p.warded) score=-Infinity;
+      break;
+    case 'S_TITHE':
+      score = hasTithe ? 470 : 180;
+      if(need<=3) score+=230;
+      break;
+    case 'S_GRAVE':
+      score = hasTithe ? 430 : 140;
+      if(need<=2) score+=250;
+      break;
+    case 'S_HOLLOW':
+      score = hasTithe ? 390 : 130;
+      if(need<=4) score+=260;
+      if(oc<5) score-=260;
+      break;
+    case 'S_SAC':
+      score = hasTithe && need<=4 ? 360 : 40;
+      if(!p.blessing || (DEF[p.blessing.id]?.blessingCost||0)<3) score=-Infinity;
+      break;
+    case 'S_DRAW2':
+      score = gs.deck.length ? (handLow?250:170) : -Infinity;
+      break;
+    case 'S_DRAW1':
+      score = gs.deck.length ? (handLow?165:95) : -Infinity;
+      break;
+    case 'S_RJUG':
+      score = p.pdeck?.length ? (handLow?260:185) : -Infinity;
+      break;
+    case 'S_VASE':
+      score = p.pdeck?.length ? (handLow?175:105) : -Infinity;
+      break;
+    case 'S_SCROUNGE':
+    case 'S_TAKEB':
+      score = gs.disc.length && aiUsefulDiscardCard(gs) ? (handLow?245:155) : -Infinity;
+      break;
+    default:
+      return -Infinity;
+  }
+
+  // The closer the AI is to 15, the more it should preserve/protect its route to victory.
+  score += Math.max(0, oc-8)*18;
+  if(aiCanWinByOffering(gs,pi) && !['S_WARD'].includes(card.id)) score-=420;
+  return score;
+}
+
+function aiChooseSelfSpell(gs, pi) {
+  let best=null;
+  gs.P[pi].hand.forEach((card,idx)=>{
+    const score=aiSelfSpellScore(gs,pi,card);
+    if(score>0 && (!best || score>best.score)) best={idx,card,score,target:pi,trigger:actionTriggerForCard(card)};
+  });
+  return best;
+}
+
+function aiDisruptionSpellScore(gs, pi, card, tgt) {
+  if(!card || tgt==null || tgt===pi || !gs.P[tgt]) return -Infinity;
+  if(!canPay(gs,pi,card,tgt)) return -Infinity;
+  const p=gs.P[pi];
+  const selfOC=OC(p);
+  const targetOC=OC(gs.P[tgt]);
+  const targetProjected=aiProjectedOfferCount(gs,tgt);
+  const threatGap=aiThreatScore(gs,tgt)-aiThreatScore(gs,pi);
+
+  // Secondary priority: only spend disruption when someone is close, ahead, or projected to win.
+  if(targetProjected<15 && targetOC<11 && targetOC<selfOC+2 && threatGap<120) return 0;
+
+  let score=100 + Math.max(0,targetOC-selfOC)*42 + Math.max(0,targetOC-9)*38 + Math.max(0,threatGap/8);
+  if(targetProjected>=15) score+=520;
+  else if(targetOC>=13) score+=330;
+  else if(targetOC>=11) score+=170;
+
+  switch(card.id){
+    case 'S_DCOL': score+=260; break;
+    case 'S_DENY': score+=targetProjected>=15?360:210; break;
+    case 'S_MRUIN': score+=240; break;
+    case 'S_MUTUAL': score+=selfOC>targetOC-2?80:180; break;
+    case 'S_STEAL': score+=220; break;
+    case 'S_SMITE':
+      score+=gs.P[tgt].blessing?230:-Infinity;
+      if(gs.P[tgt].blessing?.id==='M_SENT' || gs.P[tgt].blessing?.id==='M_GRAVE') score+=120;
+      break;
+    case 'S_HOUSE': score+=gs.P[tgt].traps.some(Boolean)?130:-Infinity; break;
+    case 'S_BSTROBERRY': score+=gs.P[tgt].hand.length?95:-Infinity; break;
+    case 'S_STROBBERY': score+=gs.P[tgt].hand.length?65:-Infinity; break;
+    case 'S_PULSE': score+=gs.P[tgt].hand.length?70:-Infinity; break;
+    default: return -Infinity;
+  }
+
+  // Preserve self: avoid sacrificing offerings for disruption unless the target is a real danger.
+  const cost=DEF[card.id]?.cost||{};
+  if(cost.offer && targetProjected<15 && targetOC<13) score-=190;
+  return score;
+}
+
+function aiChooseDisruptionSpell(gs, pi) {
+  const tgt=aiClosestToWin(gs,pi);
+  if(tgt==null) return null;
+  let best=null;
+  const ids=['S_DCOL','S_DENY','S_STEAL','S_MRUIN','S_MUTUAL','S_SMITE','S_HOUSE','S_BSTROBERRY','S_STROBBERY','S_PULSE'];
+  gs.P[pi].hand.forEach((card,idx)=>{
+    if(!ids.includes(card.id)) return;
+    const score=aiDisruptionSpellScore(gs,pi,card,tgt);
+    if(score>0 && (!best || score>best.score)) best={idx,card,score,target:tgt,trigger:actionTriggerForCard(card)};
+  });
+  return best;
 }
 
 function aiCardThreatensPlayer(gs, card, targetPi, actor, trigger) {
@@ -3210,9 +3391,12 @@ function aiTurn(gs, pi, onDone) {
 
     next => { // Draw
       p.offsThisTurn=0; p.warded=false; p.vaultUsed=false; p.heartLamentUsed=false; p.debtCollectorUsed=false; p.thievingCatUsed=false; p.offersLeft=1+(p.blessing?.id==='M_GRAVE'?1:0);
+      const catchUp = playerGetsCatchUpDraw(gs, pi);
+      const baseDraws = drawPhaseDrawCount(gs, pi);
       const ext = (p.blessing?.id==='M_HECA') ? 1 : 0;
-      drw(gs,pi,2+ext);
-      L(N(pi,gs)+' draws '+(2+ext)+' cards');
+      const totalDraws = baseDraws + ext;
+      drw(gs,pi,totalDraws);
+      L(N(pi,gs)+' draws '+totalDraws+' card'+(totalDraws!==1?'s':'')+(catchUp?' (Catch-Up draw)':''));
       renderAll(gs);
       setTimeout(next, 350);
     },
@@ -3292,47 +3476,26 @@ function aiTurn(gs, pi, onDone) {
       next();
     },
 
-    next => { // Play a spell: win-first, then protection/disruption
-      const ldr = aiThreatLeader(gs,pi);
-      const trapTgt = bestTrapTgt(gs,pi);
+    next => { // Play a spell: self-preservation first, then pressure the closest player to 15
       let played = false;
       let spellTrigger = 'any';
+      let plan = null;
 
-      // If we can win by simply offering, go straight to the offering step.
-      const canWinNow = aiCanWinByOffering(gs,pi);
-      if(canWinNow){ next(); return; }
+      // If this AI can already win by offering, preserve resources and go straight to offerings.
+      if(aiCanWinByOffering(gs,pi)){ next(); return; }
 
-      // Race/self-preservation spells first. Ward is valuable when close to 15.
-      const raceSpells = OC(p)>=10
-        ? ['S_WARD','S_TITHE','S_HOLLOW','S_SAC','S_GRAVE','S_DRAW2','S_RJUG','S_DRAW1','S_VASE','S_SCROUNGE','S_TAKEB']
-        : ['S_TITHE','S_GRAVE','S_HOLLOW','S_SAC','S_DRAW2','S_RJUG','S_DRAW1','S_VASE','S_SCROUNGE','S_TAKEB'];
-      for(const sid of raceSpells) {
-        const ci = p.hand.findIndex(c=>c.id===sid);
-        if(ci!==-1 && canPay(gs,pi,p.hand[ci])) {
-          const card=p.hand[ci]; payCost(gs,pi,card); pushRZ(gs,card,pi,pi);
-          spellTrigger=actionTriggerForCard(card);
-          played=true; break;
-        }
-      }
+      // Primary priority: advance/protect this AI's own path to 15 offerings.
+      plan = aiChooseSelfSpell(gs,pi);
 
-      // Disrupt only when it prevents a leader/near-winner from outpacing us.
-      if(!played && !canWinNow && ldr!=null && (OC(gs.P[ldr])>=12 || OC(gs.P[ldr])>=OC(p)+2)) {
-        for(const sid of ['S_DCOL','S_DENY','S_STEAL','S_MRUIN','S_SMITE','S_BSTROBERRY','S_STROBBERY','S_PULSE']) {
-          const ci = p.hand.findIndex(c=>c.id===sid);
-          if(ci!==-1 && canPay(gs,pi,p.hand[ci],ldr)) {
-            const card=p.hand[ci]; payCost(gs,pi,card); pushRZ(gs,card,pi,ldr);
-            spellTrigger=actionTriggerForCard(card);
-            played=true; break;
-          }
-        }
-      }
+      // Secondary priority: disrupt the opponent closest to 15, but only after self-help is exhausted.
+      if(!plan) plan = aiChooseDisruptionSpell(gs,pi);
 
-      // Clear traps from the biggest trap board only when close to winning or blocked by a leader.
-      if(!played && trapTgt!=null && (OC(p)>=10 || (ldr!=null && OC(gs.P[ldr])>=12))) {
-        const ci = p.hand.findIndex(c=>c.id==='S_HOUSE');
-        if(ci!==-1 && canPay(gs,pi,p.hand[ci],trapTgt)) {
-          const card=p.hand[ci]; payCost(gs,pi,card); pushRZ(gs,card,pi,trapTgt);
-          spellTrigger=actionTriggerForCard(card);
+      if(plan && plan.idx!=null) {
+        const card=p.hand[plan.idx];
+        if(card && canPay(gs,pi,card,plan.target)){
+          payCost(gs,pi,card);
+          pushRZ(gs,card,pi,plan.target);
+          spellTrigger=plan.trigger || actionTriggerForCard(card);
           played=true;
         }
       }
@@ -3647,7 +3810,7 @@ function rPanel(gs) {
     inDraw?'DRAW PHASE':resp?'RESPOND':myTurn?'YOUR TURN':gs.P[gs.cur].name.toUpperCase()+"'S TURN";
   document.getElementById('tinfo').textContent='Turn '+gs.turn+' · '+gs.P[gs.cur].name+' · '+gs.P.length+'P';
   const pcBadge=document.getElementById('player-count-badge');
-  if(pcBadge) pcBadge.textContent=gs.P.length+'P · '+(gs.P.length-1)+' Opp';
+  if(pcBadge) pcBadge.textContent=gs.P.length+'P · '+(gs.catchUpMode!==false?'Catch-Up':'No Catch-Up');
   document.getElementById('rbanner').style.display=resp?'inline-block':'none';
 
   const hasSel=UI.sel!==null&&p.hand[UI.sel];
@@ -3727,16 +3890,20 @@ function doHumanDraw(gs) {
   const p=gs.P[0];
   p.offsThisTurn=0; p.warded=false; p.vaultUsed=false; p.heartLamentUsed=false; p.debtCollectorUsed=false; p.thievingCatUsed=false; p.offersLeft=1+(p.blessing?.id==='M_GRAVE'?1:0);
   // Refresh Heart of the Lament at the start of the player's turn
-  // Show draw choice UI — player picks public or personal for each of 2 draws
+  // Show draw choice UI — player picks public or personal for each draw
+  const catchUp = playerGetsCatchUpDraw(gs, 0);
+  const draws = drawPhaseDrawCount(gs, 0);
   gs._drawPhase=true;
-  gs._drawsLeft=2;
+  gs._drawsLeft=draws;
   gs.phase='draw'; gs.cur=0;
   const dc=document.getElementById('draw-choice');
   if(dc) dc.classList.add('active');
+  const lbl=document.getElementById('draw-choice-label');
+  if(lbl) lbl.textContent=catchUp?'Catch-Up Draw 3:':'Draw '+draws+' left:';
   const btn=document.getElementById('btn-draw-personal');
   if(btn) btn.disabled=(!p.pdeck||!p.pdeck.length);
   renderAll(gs);
-  L('Draw phase: choose 2 draws','hi');
+  L('Draw phase: choose '+draws+' draw'+(draws!==1?'s':'')+(catchUp?' (Catch-Up active)':''),'hi');
 }
 
 function selCard(i) {
@@ -4634,6 +4801,11 @@ function rulesTutorialHTML(firstPlay=false) {
         '<li>When the red TARGETED warning appears, an opponent is aiming an effect at you.</li>'+
         '<li>Negates mark cards in the chain; negated cards go to discard without resolving.</li>'+
       '</ul></div>'+
+      '<div class="rule-card"><b>Catch-Up Draws</b><ul>'+
+        '<li>Default mode: once any player has 10+ offerings, players below 10 offerings draw 3 cards during their draw phase instead of 2.</li>'+
+        '<li>Players at 10+ offerings no longer receive the bonus draw.</li>'+
+        '<li>If a player drops back to 9 or fewer offerings while someone else remains at 10+, they regain Catch-Up draws.</li>'+
+      '</ul></div>'+
       '<div class="tipline">Tip: click discard, Blessings, opponent panels, and your drafted deck for extra card information. Use the Rules button any time to reopen this screen.</div>'+
     '</div>';
 }
@@ -4664,26 +4836,31 @@ function setupOptionsHTML(selected=GAME_OPTIONS.totalPlayers) {
 
 function showGameSetup() {
   const selected = clampTotalPlayers(GAME_OPTIONS.totalPlayers);
+  const catchChecked = GAME_OPTIONS.catchUpMode !== false ? ' checked' : '';
   const body =
     '<div style="color:var(--ow);line-height:1.5;margin-bottom:8px;">Choose how many total players will join the Rite. The card pool scales from the original 4-player deck so larger games have a bigger public deck after draft.</div>'+
     '<select id="setup-player-count" class="setup-select">'+setupOptionsHTML(selected)+'</select>'+
+    '<label class="setup-toggle"><input id="setup-catchup-mode" type="checkbox"'+catchChecked+'><span><b>Catch-Up Draws: ON by default</b><small>When any player has 10+ offerings, players below 10 offerings draw 3 cards during their draw phase instead of 2. Uncheck to play without this rule.</small></span></label>'+
     '<div style="color:var(--dim);font-size:.68rem;line-height:1.45;">Supports 2 to 9 total players. Each player still drafts '+DRAFT.GOAL+' personal-deck cards.</div>';
   openModal('GAME SETUP', body, '<button class="btn bg" onclick="startConfiguredGame()">Start Draft</button>', null, null);
 }
 
 function startConfiguredGame(totalPlayers=null) {
   const sel=document.getElementById('setup-player-count');
+  const catchBox=document.getElementById('setup-catchup-mode');
   const count=clampTotalPlayers(totalPlayers ?? (sel ? sel.value : GAME_OPTIONS.totalPlayers));
+  const catchUpMode = catchBox ? !!catchBox.checked : GAME_OPTIONS.catchUpMode !== false;
   GAME_OPTIONS.totalPlayers=count;
+  GAME_OPTIONS.catchUpMode=catchUpMode;
   UI.sel=null; UI.awaitResp=false; UI.respDone=null; UI.respTrig=null;
   const swn=document.getElementById('s-win'); if(swn) swn.classList.remove('show');
   closeModal();
   UID=0;
   LOGS.length=0;
   const logEl=document.getElementById('log'); if(logEl) logEl.innerHTML='';
-  GS=initGS(count);
+  GS=initGS(count, catchUpMode);
   renderAll(GS);
-  L('Starting '+count+'-player game with '+(count-1)+' opponent'+(count!==2?'s':'')+'. Deck scaled to '+GS.deck.length+' cards.','hi');
+  L('Starting '+count+'-player game with '+(count-1)+' opponent'+(count!==2?'s':'')+'. Deck scaled to '+GS.deck.length+' cards. Catch-Up Draws '+(catchUpMode?'ON':'OFF')+'.','hi');
   startDraft(GS);
 }
 
