@@ -1218,7 +1218,7 @@ const DEF = {
   S_DCOL:{id:'S_DCOL',name:'Dark Collection',type:'spell',
     req:null,cost:{discard:2},target:'opp',
     desc:'[Cost] Discard 2. [Effect] Target opponent removes 1 offering.',
-    fx:(gs,s,t)=>{rmOff(gs,t,1);}},
+    fx:(gs,s,t)=>{rmOff(gs,t,1,{showCardNames:true,source:'Dark Collection'});}},
 
   S_MRUIN:{id:'S_MRUIN',name:'Mass Ruin',type:'spell',
     req:null,cost:{discard:3},target:'all_opp',
@@ -1362,6 +1362,11 @@ const DEF = {
     req:(gs,pi)=>gs.disc.length>0,cost:{},target:'self',
     desc:'[Effect] Add 1 card from discard to your hand.',
     fx:(gs,s)=>{doRebirth(gs,s);}},
+
+  S_2NDTHGT:{id:'S_2NDTHGT',name:'Second thoughts',type:'spell',
+    req:(gs,pi)=>gs.P[pi]?.offerings?.some(Boolean),cost:{},target:'self',
+    desc:'[Effect] Remove one of your own offerings, add it to your hand.',
+    fx:(gs,s)=>{doSecondThoughts(gs,s);}},
 
   S_HTRAP:{id:'S_HTRAP',name:'Handtrap',type:'spell',
     req:(gs,pi)=>gs.rz.length>0 && gs.rz[gs.rz.length-1]?.card?.type!=='trap',cost:{},target:'self',
@@ -1573,7 +1578,7 @@ const TMPL = {
   S_TITHE:3,S_GRAVE:4,S_HOLLOW:2,S_DCOL:10,S_MRUIN:2,S_STEAL:2,
   S_MUTUAL:2,S_TAKEB:3,S_1FOR1:8,S_SAC:1,S_DENY:3,S_SMITE:3,S_STROBBERY:3,S_BSTROBERRY:3,
   // Spells (free)
-  S_DRAW1:4,S_DRAW2:3,S_DSPY:2,S_TEARS:3,S_WARD:3,S_PULSE:3,S_HOUSE:3,S_VASE:4,S_RJUG:2,S_SCROUNGE:8,S_HTRAP:12,S_COPYC:2,S_FPOINT:8,
+  S_DRAW1:4,S_DRAW2:3,S_DSPY:2,S_TEARS:3,S_WARD:3,S_PULSE:3,S_HOUSE:3,S_VASE:4,S_RJUG:2,S_SCROUNGE:8,S_2NDTHGT:7,S_HTRAP:12,S_COPYC:2,S_FPOINT:8,
   // Traps
   T_LSCREAM:2,T_NEGATE:12,T_GNEGATE:5,T_GRTSTNEGATE:3,T_CNEGATE:3,T_NOU:3,T_THOLE:3,T_ODENIAL:3,T_UNFORT:3,
   // Tithes (effect)
@@ -1764,7 +1769,12 @@ function clrTraps(gs, pi) {
   else L(N(pi,gs)+' has no traps to remove','');
 }
 
-function rmOff(gs, pi, n=1) {
+function offeringSlotDisplayName(p, slot) {
+  const c=p?.offeredCards?.[slot]||null;
+  return c?.name || ('Offering '+(slot+1));
+}
+
+function rmOff(gs, pi, n=1, opts={}) {
   const p=gs.P[pi];
   const beforeCount=OC(p);
   if(p.warded){L(N(pi,gs)+' is warded — removal blocked','hi');return;}
@@ -1774,10 +1784,24 @@ function rmOff(gs, pi, n=1) {
     if(n<=0)return;
   }
   let rem=0;
-  for(let c=0;c<n;c++) for(let i=0;i<15;i++) if(p.offerings[i]){p.offerings[i]=false;if(p.offeredCards)p.offeredCards[i]=null;rem++;break;}
+  const removedNames=[];
+  for(let c=0;c<n;c++) {
+    for(let i=0;i<15;i++) if(p.offerings[i]){
+      removedNames.push(offeringSlotDisplayName(p,i));
+      p.offerings[i]=false;
+      if(p.offeredCards) p.offeredCards[i]=null;
+      rem++;
+      break;
+    }
+  }
   if(rem) {
     const afterCount=OC(p);
-    L(N(pi,gs)+' loses '+rem+' offering'+(rem!==1?'s':'')+' ['+afterCount+'/15]','warn');
+    if(opts?.showCardNames) {
+      const src=opts.source ? ' to '+opts.source : '';
+      L(N(pi,gs)+' loses '+removedNames.join(', ')+src+' ['+afterCount+'/15]','warn');
+    } else {
+      L(N(pi,gs)+' loses '+rem+' offering'+(rem!==1?'s':'')+' ['+afterCount+'/15]','warn');
+    }
     if(catchUpModeEnabled(gs) && beforeCount>=CATCH_UP_THRESHOLD && afterCount<CATCH_UP_THRESHOLD && anyOtherPlayerAtCatchUpLine(gs,pi)) {
       L(N(pi,gs)+' is below '+CATCH_UP_THRESHOLD+' again; Catch-Up draw is restored while another player remains at '+CATCH_UP_THRESHOLD+'+.','hi');
     }
@@ -2059,6 +2083,69 @@ function doRebirth(gs, src) {
   }
 }
 
+function ownOfferingSlots(gs, pi) {
+  const p=gs.P[pi];
+  const slots=[];
+  if(!p) return slots;
+  for(let i=0;i<15;i++) if(p.offerings[i]) slots.push(i);
+  return slots;
+}
+
+function ownOfferingReturnScore(card) {
+  if(!card) return 1;
+  let score=10;
+  if(card.id?.startsWith('M_ELD_')) score+=80;
+  if(card.type==='spell') score+=55;
+  if(card.type==='trap') score+=45;
+  if(card.type==='tithe') score+=25;
+  if(DEF[card.id]?.onOffer) score+=35;
+  if(DEF[card.id]?.blessingCost) score+=DEF[card.id].blessingCost*6;
+  return score;
+}
+
+function bestOwnOfferingSlotToReturn(gs, pi) {
+  const p=gs.P[pi];
+  let best=-1,bestScore=-Infinity;
+  ownOfferingSlots(gs,pi).forEach(slot=>{
+    const card=p.offeredCards?.[slot]||null;
+    const score=ownOfferingReturnScore(card);
+    if(score>bestScore){bestScore=score;best=slot;}
+  });
+  return best;
+}
+
+function returnOfferingToHand(gs, pi, slot, sourceName='Second thoughts') {
+  const p=gs.P[pi];
+  if(!p || !p.offerings[slot]) { L('That offering is no longer available','warn'); return false; }
+  const beforeCount=OC(p);
+  const card=p.offeredCards?.[slot]||null;
+  p.offerings[slot]=false;
+  if(p.offeredCards) p.offeredCards[slot]=null;
+  const afterCount=OC(p);
+  if(card) {
+    const clean={...card};
+    delete clean._asBlessing;
+    p.hand.push(clean);
+    L(N(pi,gs)+' reconsiders '+clean.name+' — removed from offerings and returned to hand ['+afterCount+'/15]','hi');
+  } else {
+    L(N(pi,gs)+' removes Offering '+(slot+1)+' with '+sourceName+', but no source card was recorded ['+afterCount+'/15]','warn');
+  }
+  if(catchUpModeEnabled(gs) && beforeCount>=CATCH_UP_THRESHOLD && afterCount<CATCH_UP_THRESHOLD && anyOtherPlayerAtCatchUpLine(gs,pi)) {
+    L(N(pi,gs)+' is below '+CATCH_UP_THRESHOLD+' again; Catch-Up draw is restored while another player remains at '+CATCH_UP_THRESHOLD+'+.','hi');
+  }
+  return true;
+}
+
+function doSecondThoughts(gs, src) {
+  if(!ownOfferingSlots(gs,src).length) { L(N(src,gs)+' has no offerings to reconsider','warn'); return; }
+  if(gs.P[src].human) {
+    gs._secondThoughtsPending = src;
+  } else {
+    const slot=bestOwnOfferingSlotToReturn(gs,src);
+    if(slot!==-1) returnOfferingToHand(gs,src,slot,'Second thoughts');
+  }
+}
+
 // ─────────────────────────────────────────
 // COST
 // ─────────────────────────────────────────
@@ -2145,7 +2232,7 @@ function restoreHumanPlay(gs, snap) {
   gs._glimpsePending=null; gs._glimpseTop=null; gs._glimpseCb=null;
   gs._rebirthPending=null; gs._rebirthCb=null;
   gs._stealOfferingPending=null; gs._stealOfferingCb=null;
-  gs._blatantStrobberyPending=null; gs._blatantStrobberyCb=null; gs._giveCardChoice=null;
+  gs._blatantStrobberyPending=null; gs._blatantStrobberyCb=null; gs._secondThoughtsPending=null; gs._secondThoughtsCb=null; gs._giveCardChoice=null;
 }
 
 function cancelHumanPlay(gs, snap, selectedUid=null) {
@@ -2724,6 +2811,7 @@ const EFFECT_LOG = {
   S_VASE:(gs,s,t)=>logName(gs,s)+' draws 1 personal card',
   S_RJUG:(gs,s,t)=>logName(gs,s)+' draws 2 personal cards',
   S_SCROUNGE:(gs,s,t)=>logName(gs,s)+' returns 1 discard to hand',
+  S_2NDTHGT:(gs,s,t)=>logName(gs,s)+' removes one of their own offerings and returns it to hand',
   S_HTRAP:(gs,s,t)=>logName(gs,s)+' negates the last chain card',
   S_COPYC:(gs,s,t)=>logName(gs,s)+' copies the last spell on the chain',
   T_NEGATE:(gs,s,t)=>logName(gs,s)+' negates the last chain card',
@@ -2812,6 +2900,13 @@ function _afterResolve(gs, cb) {
   // Handle Blatant Strobbery hand choice after the chain clears
   if(gs._blatantStrobberyPending && gs.P[0].human) {
     openBlatantStrobberyModal(gs, cb);
+    return;
+  }
+  // Handle Second thoughts choice after the chain clears
+  if(gs._secondThoughtsPending != null && gs.P[0].human) {
+    const src = gs._secondThoughtsPending;
+    gs._secondThoughtsPending = null;
+    openSecondThoughtsModal(gs, src, cb);
     return;
   }
   // Handle Deck Spy pick (human picks 1 of top 3 to keep)
@@ -3110,7 +3205,7 @@ function aiShouldPlayBlessing(gs, pi, card) {
 }
 
 function aiSpellAdvancesWin(card) {
-  return ['S_TITHE','S_GRAVE','S_HOLLOW','S_SAC','S_DRAW2','S_RJUG','S_DRAW1','S_VASE','S_SCROUNGE','S_TAKEB'].includes(card?.id);
+  return ['S_TITHE','S_GRAVE','S_HOLLOW','S_SAC','S_DRAW2','S_RJUG','S_DRAW1','S_VASE','S_SCROUNGE','S_TAKEB','S_2NDTHGT'].includes(card?.id);
 }
 
 function aiHasTitheToOffer(gs, pi) {
@@ -3168,6 +3263,12 @@ function aiSelfSpellScore(gs, pi, card) {
     case 'S_TAKEB':
       score = gs.disc.length && aiUsefulDiscardCard(gs) ? (handLow?245:155) : -Infinity;
       break;
+    case 'S_2NDTHGT': {
+      const slot=bestOwnOfferingSlotToReturn(gs,pi);
+      const cardToReturn=slot!==-1 ? (p.offeredCards?.[slot]||null) : null;
+      score = (slot!==-1 && oc<=8 && cardToReturn) ? 115 + ownOfferingReturnScore(cardToReturn) : -Infinity;
+      break;
+    }
     default:
       return -Infinity;
   }
@@ -4189,6 +4290,28 @@ function closeModal() {
   _modalCancelCb=null;
   const mov=document.getElementById('mov');
   if(mov) mov.classList.remove('open','rules-center','discard-selector');
+}
+
+function openSecondThoughtsModal(gs, src, cb) {
+  const p=gs.P[src];
+  const slots=ownOfferingSlots(gs,src);
+  if(!slots.length){ L(N(src,gs)+' has no offerings to reconsider','warn'); if(cb) cb(); return; }
+  const opts = '<div class="choice-card-grid discard-pile-grid">'+slots.map(slot=>
+    readableCardHTML(p.offeredCards?.[slot]||null,{label:'Offering Slot '+(slot+1),onclick:'doSecondThoughtsPick('+slot+')'})
+  ).join('')+'</div>';
+  openModal('Second thoughts','<div style="margin-bottom:10px;color:var(--ow);">Choose one of your offerings to remove and return to your hand:</div>'+opts,'',
+    ()=>{ if(cancelPendingPlayUndo(GS)) return; closeModal(); const c=GS._secondThoughtsCb; GS._secondThoughtsCb=null; if(c) c(); });
+  const mov=document.getElementById('mov');
+  if(mov) mov.classList.add('discard-selector');
+  GS._secondThoughtsCb = cb;
+}
+
+function doSecondThoughtsPick(slot) {
+  closeModal();
+  returnOfferingToHand(GS,0,slot,'Second thoughts');
+  const cb=GS._secondThoughtsCb; GS._secondThoughtsCb=null;
+  renderAll(GS);
+  if(cb) cb(); else clearPendingPlayUndo(GS);
 }
 
 function openRebirthModal(gs, src, cb) {
